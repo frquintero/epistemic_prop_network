@@ -116,3 +116,31 @@ The network uses structured JSON containers for data passing between layers, whi
 - **Maintainability**: Clear data contracts between layers with adaptable content formats
 
 This agent architecture ensures rigorous, bias-resistant epistemological inquiry while delivering rich, narrative-driven insights.
+
+## Documentation
+
+This project includes comprehensive documentation covering all aspects of the Epistemological Propagation Network:
+
+### Core Documentation
+
+- **README.md** - Main project readme with setup and usage instructions
+- **AGENTS.md** - Agent architecture documentation (this file)
+- **architecture.md** - System architecture overview
+- **project_concept.md** - Project concept and vision
+
+### Development & Planning
+
+- **build_plan.md** - Development roadmap and current status
+- **implementation_plan.md** - Implementation details and technical specifications
+- **layered_architecture_plan.md** - Detailed layered architecture plan
+- **network_flow.md** - Data flow specifications between layers
+
+### Technical Documentation
+
+- **REAL_LLM_TESTING_README.md** - Testing documentation and LLM integration guide
+- **gpt-oss-120b-guide.md** - LLM integration guide for Groq GPT-OSS-120B model
+
+### Additional Resources
+
+- **docs/examples/demonstrate_pydantic.py** - Pydantic model examples and demonstrations
+- **test_results/** - Generated test reports and LLM interaction details
