@@ -130,10 +130,10 @@ This project includes comprehensive documentation covering all aspects of the Ep
 
 ### Development & Planning
 
-- **build_plan.md** - Development roadmap and current status
+- **build_plan_and_flow.md** - Build plan, development roadmap, and data flow specifications
 - **implementation_plan.md** - Implementation details and technical specifications
 - **layered_architecture_plan.md** - Detailed layered architecture plan
-- **network_flow.md** - Data flow specifications between layers
+- **build_plan_and_flow.md** - Build plan and data flow specifications between layers
 
 ### Technical Documentation
 

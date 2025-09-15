@@ -1,12 +1,14 @@
-# Epistemological Propagation Network - Build Plan
+# Epistemological Propagation Network - Build Plan & Flow
 
 ## Overview
 
-This plan outlines the systematic implementation of the Epistemological Propagation Network using Groq's GPT-OSS-120B model. Each phase includes validation steps to ensure compliance with architectural specifications and functional correctness.
+This document outlines the systematic implementation and data flow of the Epistemological Propagation Network using Groq's GPT-OSS-120B model. Each phase includes validation steps to ensure compliance with architectural specifications and functional correctness, along with detailed node specifications, LLM configurations, and data flow requirements.
+
+**Note:** LLM configurations (temperature, reasoning effort, tools) vary by phase based on the specific epistemological requirements of each layer.
 
 ---
 
-## Phase 1: Foundation & Infrastructure ✅ **COMPLETED**
+## ~~Phase 1: Foundation & Infrastructure~~ ✅ **COMPLETED**
 
 ### Phase 1 Objectives ✅
 
@@ -51,7 +53,7 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 ### Phase 1 Validation Steps ✅
 
 - **Architecture Compliance**: ✅ Directory structure matches `layered_architecture_plan.md` section "Code Organization"
-- **Network Flow Alignment**: ✅ Data models support the triple structure defined in `network_flow.md`
+- **Network Flow Alignment**: ✅ Data models support the triple structure defined in `build_plan_and_flow.md`
 - **Agent Specifications**: ✅ Base classes align with agent roles in `agents.md`
 - **Model Integration**: ✅ GPT-OSS-120B setup follows `gpt-oss-120b-guide.md` getting started section
 - **Testing**: ✅ Run basic LLM connectivity test and schema validation tests (100% pass rate)
@@ -60,29 +62,41 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 
 ---
 
-## Phase 2: Layer 1 - Input Reformulation
+## ~~Phase 2: Layer 1 - Input Reformulation~~ ✅ **COMPLETED**
 
-### Phase 2 Objectives
+### Phase 2 Objectives ✅
 
 - Implement the Reformulator agent
 - Create bias elimination and context addition logic
 - Establish input validation and error handling
 
-### Phase 2 Implementation Tasks
+### Phase 2 Implementation Tasks ✅
 
-1. Create `Reformulator` class in `layers/layer1_reformulation/`
-2. Implement bias detection and neutral language processing
-3. Add factual context enrichment capabilities
-4. Create input sanitization utilities
-5. Add comprehensive error handling
+1. ✅ Create `Reformulator` class in `layers/layer1_reformulation/`
+2. ✅ Implement bias detection and neutral language processing
+3. ✅ Add factual context enrichment capabilities
+4. ✅ Create input sanitization utilities
+5. ✅ Add comprehensive error handling
 
-### Phase 2 Validation Steps
+### Phase 2 Network Flow Details
 
-- **Architecture Compliance**: Confirm Layer 1 implementation follows `layered_architecture_plan.md` "Layer 1: Input Reformulation" specifications
-- **Network Flow Alignment**: Verify reformulated output format matches Phase 1 → Phase 2 interface in `network_flow.md`
-- **Agent Specifications**: Ensure Reformulator behavior matches the agent description in `agents.md` "Layer 1: Reformulator Agent"
-- **Model Integration**: Test structured output usage aligns with `gpt-oss-120b-guide.md` best practices
-- **Testing**: Unit tests for bias elimination, integration tests for end-to-end reformulation, validate output format
+#### Node: Reformulator
+
+- **Task:** "Reformulate the following question to remove bias, ensure coherence, and add neutral context. Focus on epistemological clarity."
+- **Input:** Raw user question.
+- **Prompt:** [raw_user_question] + [Task]
+- **Expected Output:** A reformulated question that is unbiased, coherent, and enriched with neutral context.
+- **LLM Configuration:** Medium reasoning effort, temperature 0.9, no tools
+
+### Phase 2 Validation Steps ✅
+
+- **Architecture Compliance**: ✅ Confirm Layer 1 implementation follows `layered_architecture_plan.md` "Layer 1: Input Reformulation" specifications
+- **Network Flow Alignment**: ✅ Verify reformulated output format matches Phase 1 → Phase 2 interface in `build_plan_and_flow.md`
+- **Agent Specifications**: ✅ Ensure Reformulator behavior matches the agent description in `agents.md` "Layer 1: Reformulator Agent"
+- **Model Integration**: ✅ Test structured output usage aligns with `gpt-oss-120b-guide.md` best practices
+- **Testing**: ✅ Unit tests for bias elimination, integration tests for end-to-end reformulation, validate output format (11/11 tests passing)
+
+**Completion Status:** Phase 2 achieved 100% validation score with all components functional and tested.
 
 ---
 
@@ -102,10 +116,35 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 4. Add error handling for individual node failures
 5. Create fallback mechanisms for partial results
 
+### Phase 3 Network Flow Details
+
+#### Nodes: Semantic Node, Genealogical Node, Teleological Node
+
+##### Semantic Node
+
+- **Task:** "Provide a strict semantic definition of the concept described below. Include etymology, common usage, and logical structure."
+- **Input:** Reformulated question from Phase 2.
+- **Prompt:** [reformulated_question] + [Task]
+- **Expected Output:** A precise semantic definition.
+
+##### Genealogical Node
+
+- **Task:** "Provide a historical account of the concept described below. Include its origin, evolution, and key contributors."
+- **Input:** Reformulated question from Phase 2.
+- **Prompt:** [reformulated_question] + [Task]
+- **Expected Output:** A historical account.
+
+##### Teleological Node
+
+- **Task:** "Provide a functional account of the concept described below. Explain its purpose, utility, and practical applications."
+- **Input:** Reformulated question from Phase 2.
+- **Prompt:** [reformulated_question] + [Task]
+- **Expected Output:** A functional account.
+
 ### Phase 3 Validation Steps
 
 - **Architecture Compliance**: Verify Layer 2 structure matches `layered_architecture_plan.md` "Layer 2: Definition Generation" specifications
-- **Network Flow Alignment**: Confirm triple output format matches Phase 2 → Phase 3 interface in `network_flow.md`
+- **Network Flow Alignment**: Confirm triple output format matches Phase 2 → Phase 3 interface in `build_plan_and_flow.md`
 - **Agent Specifications**: Validate each node implementation against agent descriptions in `agents.md` "Layer 2: Definition Generation Agents"
 - **Model Integration**: Test structured outputs for triple generation following `gpt-oss-120b-guide.md` schema requirements
 - **Testing**: Unit tests for each node, integration tests for parallel execution, triple validation tests
@@ -128,10 +167,35 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 4. Add validation result aggregation (`{V_c, V_l, V_p}`)
 5. Create validation failure handling and reporting
 
+### Phase 4 Network Flow Details
+
+#### Validation Nodes: Correspondence Validator, Coherence Validator, Pragmatic Validator
+
+##### Correspondence Validator
+
+- **Task:** "Validate the following outputs for empirical alignment with observable reality. Provide evidence-based assessments."
+- **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
+- **Prompt:** [triple] + [Task]
+- **Expected Output:** Empirical validation results.
+
+##### Coherence Validator
+
+- **Task:** "Validate the following outputs for logical consistency. Check internal coherence and alignment with established knowledge."
+- **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
+- **Prompt:** [triple] + [Task]
+- **Expected Output:** Logical validation results.
+
+##### Pragmatic Validator
+
+- **Task:** "Validate the following outputs for practical utility. Assess their usefulness in real-world scenarios."
+- **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
+- **Prompt:** [triple] + [Task]
+- **Expected Output:** Practical validation results.
+
 ### Phase 4 Validation Steps
 
 - **Architecture Compliance**: Confirm Layer 3 implementation follows `layered_architecture_plan.md` "Layer 3: Validation" specifications
-- **Network Flow Alignment**: Verify validation triple format matches Phase 3 → Phase 4 interface in `network_flow.md`
+- **Network Flow Alignment**: Verify validation triple format matches Phase 3 → Phase 4 interface in `build_plan_and_flow.md`
 - **Agent Specifications**: Ensure validator behaviors match agent descriptions in `agents.md` "Layer 3: Validation Agents"
 - **Model Integration**: Test structured outputs for validation results using `gpt-oss-120b-guide.md` schema patterns
 - **Testing**: Unit tests for each validator, integration tests for triple processing, validation accuracy tests
@@ -154,10 +218,19 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 4. Add final output formatting and presentation
 5. Create quality assurance and validation checks
 
+### Phase 5 Network Flow Details
+
+#### Node: Synthesis Node
+
+- **Task:** "Synthesize the following validated outputs into a holistic narrative. Include a definition, history, function, validation-based qualifications, and a thesis."
+- **Input:** Triple `{V_c, V_l, V_p}` from Phase 4.
+- **Prompt:** [triple] + [Task]
+- **Expected Output:** A comprehensive, narrative-driven answer with a thesis.
+
 ### Phase 5 Validation Steps
 
 - **Architecture Compliance**: Verify Layer 4 structure matches `layered_architecture_plan.md` "Layer 4: Synthesis & Communication" specifications
-- **Network Flow Alignment**: Confirm final output format matches Phase 4 output in `network_flow.md`
+- **Network Flow Alignment**: Confirm final output format matches Phase 4 output in `build_plan_and_flow.md`
 - **Agent Specifications**: Validate Synthesis node against agent description in `agents.md` "Layer 4: Synthesis Agent"
 - **Model Integration**: Test narrative generation follows `gpt-oss-120b-guide.md` best practices for complex outputs
 - **Testing**: Unit tests for synthesis logic, integration tests for end-to-end processing, output quality validation
@@ -183,7 +256,7 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 ### Phase 6 Validation Steps
 
 - **Architecture Compliance**: Verify complete system follows `layered_architecture_plan.md` "Data Flow Architecture" diagram
-- **Network Flow Alignment**: Test complete 4-phase flow matches `network_flow.md` specification
+- **Network Flow Alignment**: Test complete 4-phase flow matches `build_plan_and_flow.md` specification
 - **Agent Specifications**: Confirm all agent interactions follow `agents.md` "Agent Interactions" guidelines
 - **Model Integration**: Validate end-to-end usage follows `gpt-oss-120b-guide.md` production considerations
 - **Testing**: End-to-end integration tests, performance benchmarking, error scenario testing
@@ -209,7 +282,7 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 ### Phase 7 Validation Steps
 
 - **Architecture Compliance**: Confirm production setup follows `layered_architecture_plan.md` "Production Readiness" guidelines
-- **Network Flow Alignment**: Validate production performance meets `network_flow.md` requirements
+- **Network Flow Alignment**: Validate production performance meets `build_plan_and_flow.md` requirements
 - **Agent Specifications**: Test production behavior against `agents.md` quality attributes
 - **Model Integration**: Implement production monitoring following `gpt-oss-120b-guide.md` production considerations
 - **Testing**: Load testing, security testing, production readiness checklist validation
@@ -241,6 +314,6 @@ This plan outlines the systematic implementation of the Epistemological Propagat
 
 ---
 
-*Build Plan Version: 1.0*
+*Build Plan & Flow Version: 1.0*
 *Last Updated: September 14, 2025*
-*Next Phase: Foundation & Infrastructure*
+*Current Status: Phase 2 Completed, Phase 3 Ready*
