@@ -49,12 +49,7 @@ async def test_complete_layers1_4_flow():
     )
 
     mock_synthesis = SynthesisOutput(
-        thesis="Mental models are indispensable yet imperfect cognitive frameworks that shape our understanding of complex systems and enable adaptive thinking in an uncertain world.",
-        definition="Mental models are internal cognitive representations that simplify external reality for understanding, reasoning, and prediction.",
-        history="Originating with Kenneth Craik in 1943, the concept evolved through cognitive psychology and was popularized in decision-making contexts.",
-        function="They enable simulation of outcomes, formation of explanations, and efficient decision-making without direct experience.",
-        validation_qualifications="Empirically supported by neuroscience, logically consistent with cognitive theories, and highly practical across multiple domains.",
-        narrative="Mental models represent a cornerstone of cognitive science, bridging the gap between abstract theory and practical application. Their journey from Craik's foundational work to modern applications demonstrates the enduring value of simplified representations in human cognition."
+        raw_response="Mental models are indispensable yet imperfect cognitive frameworks that shape our understanding of complex systems and enable adaptive thinking in an uncertain world. Mental models are internal cognitive representations that simplify external reality for understanding, reasoning, and prediction. Originating with Kenneth Craik in 1943, the concept evolved through cognitive psychology and was popularized in decision-making contexts. They enable simulation of outcomes, formation of explanations, and efficient decision-making without direct experience. Empirically supported by neuroscience, logically consistent with cognitive theories, and highly practical across multiple domains. Mental models represent a cornerstone of cognitive science, bridging the gap between abstract theory and practical application. Their journey from Craik's foundational work to modern applications demonstrates the enduring value of simplified representations in human cognition."
     )
 
     # Initialize all layer managers
@@ -83,7 +78,7 @@ async def test_complete_layers1_4_flow():
     ]
 
     mock_l4_client = AsyncMock()
-    mock_l4_client.generate_text.return_value = mock_synthesis.narrative
+    mock_l4_client.generate_text.return_value = mock_synthesis.raw_response
 
     # Replace Layer 3 validators with mocked ones
     layer3_manager.correspondence_validator.llm_client = mock_l3_client
@@ -127,8 +122,7 @@ async def test_complete_layers1_4_flow():
         # Layer 4: Synthesis
         print("\n🔄 Layer 4: Synthesis")
         final_result = await layer4_manager.process(phase3_result)
-        print(f"✅ Thesis: {final_result.thesis}")
-        print(f"✅ Narrative Length: {len(final_result.narrative)} characters")
+        print(f"✅ Raw Response Length: {len(final_result.raw_response)} characters")
 
         # Verify the complete flow
         assert isinstance(reformulated, ReformulatedQuestion)
@@ -137,13 +131,12 @@ async def test_complete_layers1_4_flow():
         assert isinstance(final_result, SynthesisOutput)
 
         # Verify content quality
-        assert len(final_result.thesis) > 20
-        assert len(final_result.narrative) > 50
-        assert "mental models" in final_result.narrative.lower()
-        assert "cognitive" in final_result.thesis.lower() or "representations" in final_result.thesis.lower()
+        assert len(final_result.raw_response) > 100
+        assert len(final_result.raw_response) > 50
+        assert "mental models" in final_result.raw_response.lower()
 
         print("\n🎉 SUCCESS: Complete Layers 1-4 integration test passed!")
-        print(f"📊 Final Output Thesis: {final_result.thesis}")
+        print(f"📊 Final Output Length: {len(final_result.raw_response)} characters")
 
 
 @pytest.mark.asyncio
@@ -178,17 +171,11 @@ async def test_layer4_empty_inputs():
 
     # Mock successful processing
     mock_output = SynthesisOutput(
-        thesis="Minimal test thesis about the subject matter.",
-        definition="Minimal definition extracted from input.",
-        history="Minimal historical context provided.",
-        function="Minimal functional description available.",
-        validation_qualifications="Minimal validation qualifications noted.",
-        narrative="This is a minimal test narrative that meets the length requirements for validation while demonstrating the synthesis process with limited input data."
+        raw_response="Minimal test thesis about the subject matter. Minimal definition extracted from input. Minimal historical context provided. Minimal functional description available. Minimal validation qualifications noted. This is a minimal test narrative that meets the length requirements for validation while demonstrating the synthesis process with limited input data."
     )
 
     with patch.object(layer4_manager.synthesis_node, 'process', return_value=mock_output):
         result = await layer4_manager.process(phase3_triple)
 
         assert isinstance(result, SynthesisOutput)
-        assert len(result.narrative) >= 50
-        assert len(result.thesis) >= 20
+        assert len(result.raw_response) >= 50
