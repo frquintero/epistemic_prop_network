@@ -4,7 +4,10 @@
 
 This document outlines the systematic implementation and data flow of the Epistemological Propagation Network using Groq's GPT-OSS-120B model. Each phase includes validation steps to ensure compliance with architectural specifications and functional correctness, along with detailed node specifications, LLM configurations, and data flow requirements.
 
-**Note:** LLM configurations (temperature, reasoning effort, tools) vary by phase based on the specific epistemological requirements of each layer.
+**Note:** LLM configurations (temperature, reasoning effort, tools) vary by phase based on the specific epistemological requirements of each layer:
+
+- **Layers 1-3**: Temperature 0.8, reasoning effort "medium" for balanced creativity and analytical depth
+- **Layer 4**: Temperature 0.6, reasoning effort "high" for focused synthesis and thesis formation
 
 ---
 
@@ -86,7 +89,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Raw user question.
 - **Prompt:** [raw_user_question] + [Task]
 - **Expected Output:** A reformulated question that is unbiased, epistemically contextualized, and ready for downstream definition work without additional processing.
-- **LLM Configuration:** Medium reasoning effort, temperature 0.9, no tools
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ### Phase 2 Validation Steps ✅
 
@@ -128,6 +131,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Reformulated question from Phase 2.
 - **Prompt:** [reformulated_question] + [Task]
 - **Expected Output:** A precise semantic definition with academic rigor.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ##### Genealogical Node ✅
 
@@ -135,6 +139,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Reformulated question from Phase 2.
 - **Prompt:** [reformulated_question] + [Task]
 - **Expected Output:** A chronological historical narrative.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ##### Teleological Node ✅
 
@@ -142,6 +147,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Reformulated question from Phase 2.
 - **Prompt:** [reformulated_question] + [Task]
 - **Expected Output:** A functional analysis with practical applications.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ### Phase 3 Validation Steps ✅
 
@@ -154,7 +160,6 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Testing**: ✅ Unit tests for all nodes, integration tests for parallel processing, and live LLM tests with clean prompts (12/12 tests passing)
 
 **Completion Status:** Phase 3 achieved 100% validation score with all components functional, optimized, and tested.
-- **Testing**: Unit tests for each node, integration tests for parallel execution, triple validation tests
 
 ---
 
@@ -184,6 +189,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Empirical validation results.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ##### Coherence Validator
 
@@ -191,6 +197,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Logical validation results.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ##### Pragmatic Validator
 
@@ -198,6 +205,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Practical validation results.
+- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
 
 ### Phase 4 Validation Steps ✅
 
@@ -235,6 +243,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{V_c, V_l, V_p}` from Phase 4.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** A comprehensive, narrative-driven answer with a thesis.
+- **LLM Configuration:** Temperature 0.6, reasoning effort "high", max tokens 8192
 
 ### Phase 5 Validation Steps
 
@@ -324,5 +333,5 @@ This document outlines the systematic implementation and data flow of the Episte
 ---
 
 *Build Plan & Flow Version: 1.0*
-*Last Updated: September 14, 2025*
-*Current Status: Phase 2 Completed, Phase 3 Ready*
+*Last Updated: September 16, 2025*
+*Current Status: All Phases Completed with Optimized LLM Configurations*

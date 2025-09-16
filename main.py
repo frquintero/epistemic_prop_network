@@ -8,6 +8,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 from core.schemas import NetworkRequest
+from core.config import NetworkConfig
+from core.llm_client import LLMClient, LLMConfig
 from layers.layer1_reformulation import Reformulator
 from layers.layer2_definition import Layer2DefinitionManager
 from layers.layer3_validation import Layer3ValidationManager
@@ -18,11 +20,67 @@ class EpistemologicalPropagationNetwork:
     """Main interface for the Epistemological Propagation Network."""
 
     def __init__(self):
-        """Initialize the EPN with all layer managers."""
-        self.reformulator = Reformulator()
-        self.layer2_manager = Layer2DefinitionManager()
+        """Initialize the EPN with all layer managers and optimized LLM configurations."""
+        
+        # Create different LLM configs for different layers
+        base_config = {
+            "api_key": os.getenv("GROQ_API_KEY", ""),
+            "model": "openai/gpt-oss-120b",
+            "max_tokens": 8192,
+            "timeout": 120.0,
+            "max_retries": 3
+        }
+        
+        # Layers 1-3: temperature=0.8, reasoning_effort="medium"
+        llm_config_layers_1_3 = LLMConfig(
+            **base_config,
+            temperature=0.8,
+            reasoning_effort="medium"
+        )
+        
+        # Layer 4: temperature=0.6, reasoning_effort="high" 
+        llm_config_layer_4 = LLMConfig(
+            **base_config,
+            temperature=0.6,
+            reasoning_effort="high"
+        )
+        
+        # Create network configs
+        network_config_layers_1_3 = NetworkConfig(
+            groq_api_key=base_config["api_key"],
+            groq_model="openai/gpt-oss-120b",
+            temperature=0.8,
+            reasoning_effort="medium",
+            max_tokens_per_request=8192,
+            request_timeout=120.0,
+            max_retries=3
+        )
+        
+        network_config_layer_4 = NetworkConfig(
+            groq_api_key=base_config["api_key"],
+            groq_model="openai/gpt-oss-120b", 
+            temperature=0.6,
+            reasoning_effort="high",
+            max_tokens_per_request=8192,
+            request_timeout=120.0,
+            max_retries=3
+        )
+        
+        # Initialize agents with optimized configs
+        self.reformulator = Reformulator(llm_client=LLMClient(config=llm_config_layers_1_3))
+        self.layer2_manager = Layer2DefinitionManager(network_config=network_config_layers_1_3)
         self.layer3_manager = Layer3ValidationManager()
-        self.layer4_manager = Layer4SynthesisManager()
+        # Override the validators' LLM clients with optimized config
+        self.layer3_manager.correspondence_validator = type(self.layer3_manager.correspondence_validator)(
+            llm_client=LLMClient(config=llm_config_layers_1_3)
+        )
+        self.layer3_manager.coherence_validator = type(self.layer3_manager.coherence_validator)(
+            llm_client=LLMClient(config=llm_config_layers_1_3)
+        )
+        self.layer3_manager.pragmatic_validator = type(self.layer3_manager.pragmatic_validator)(
+            llm_client=LLMClient(config=llm_config_layers_1_3)
+        )
+        self.layer4_manager = Layer4SynthesisManager(network_config=network_config_layer_4)
 
     def _extract_metadata_from_question(self, question: str) -> Dict[str, Any]:
         """Automatically extract metadata from the question content."""

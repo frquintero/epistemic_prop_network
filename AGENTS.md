@@ -4,12 +4,12 @@
 Activate the bundled virtual environment with `source venv/bin/activate` before running tools. Load credentials from `~/.config/env.d/ai.env`, ensuring it exports `GROQ_API_KEY=gsk_...`; confirm with `echo $GROQ_API_KEY`. Keep `.env`-style files untracked and rely on environment variables when writing scripts or tests that reach the Groq API.
 
 ## Project Structure & Module Organization
-Layered agents reside in `layers/`: reformulation lives in `layer1_reformulation/`, definition generators in `layer2_definition/`, and validators in `layer3_validation/`. Shared orchestration helpers are in `core/` and `utils/`. Entry points include `main.py` (pipeline runner), `cli.py` (argument-parsed interface), and `api.py` for service embedding. Documentation and design references live alongside this file and within `docs/`. Automated tests mirror the layering inside `tests/`.
+Layered agents reside in `layers/`: reformulation lives in `layer1_reformulation/`, definition generators in `layer2_definition/`, and validators in `layer3_validation/`. Shared orchestration helpers are in `core/` and `utils/`. Entry points include `main.py` (pipeline runner), `inspect_pipeline.py` (detailed inspection tool), and `api.py` for service embedding. Documentation and design references live alongside this file and within `docs/`. Automated tests mirror the layering inside `tests/`.
 
 ## Build, Test, and Development Commands
 - `pip install -r requirements.txt` – install runtime dependencies inside the activated virtual environment.
 - `python main.py "What are mental models?"` – execute the full four-layer pipeline for an ad-hoc query.
-- `python cli.py --question "..."` – run the CLI interface with explicit options; use `--help` for usage details.
+- `python inspect_pipeline.py "What are mental models?"` – run detailed pipeline inspection with all prompts, outputs, and LLM configurations.
 - `pytest` – execute the async-aware unit and integration suite configured through `pyproject.toml`.
 
 ## Coding Style & Naming Conventions
