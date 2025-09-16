@@ -252,6 +252,162 @@ The network uses structured JSON containers for data passing between layers, whi
 
 This agent architecture ensures rigorous, bias-resistant epistemological inquiry while delivering rich, narrative-driven insights.
 
+## Development Environment & Testing
+
+### Virtual Environment Setup
+
+The project uses a Python virtual environment to manage dependencies and isolate the development environment.
+
+```bash
+# Navigate to the project directory
+cd epistemic-llm-network
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Dependencies are pre-installed in the virtual environment
+# If you need to reinstall, run:
+pip install -r requirements.txt
+```
+
+### API Configuration
+
+The system requires a Groq API key to function. Here's how to get and configure it:
+
+#### Getting a Groq API Key
+
+1. **Sign up at Groq**: Go to <https://console.groq.com/>
+2. **Create an account**: Sign up with your email or GitHub account
+3. **Generate API key**:
+   - Go to the "API Keys" section in your dashboard
+   - Click "Create API Key"
+   - Copy the key (it starts with `gsk_`)
+
+#### Setting Up the Environment
+
+The system loads the API key from an external environment file for security:
+
+```bash
+# Check if the environment file exists
+ls ~/.config/env.d/ai.env
+
+# If it doesn't exist, create the directory and file
+mkdir -p ~/.config/env.d/
+echo 'export GROQ_API_KEY=gsk_your_actual_groq_api_key_here' > ~/.config/env.d/ai.env
+
+# The .zshrc file should already contain this line to auto-load the environment:
+# if [[ -r "$HOME/.config/env.d/ai.env" ]]; then
+#   source "$HOME/.config/env.d/ai.env"
+# fi
+```
+
+#### Activating the Environment
+
+```bash
+# Activate the virtual environment
+source venv/bin/activate
+
+# Load the API key (if not auto-loaded by .zshrc)
+source ~/.config/env.d/ai.env
+
+# Verify the API key is loaded
+echo "GROQ_API_KEY: $GROQ_API_KEY"
+```
+
+**Note**: The API key should start with `gsk_` - if you see `your-groq-api-key-here`, it's still a placeholder.
+
+### Running the Application
+
+#### Main Interactive Interface
+
+```bash
+# Activate virtual environment and load API key
+source venv/bin/activate
+source ~/.config/env.d/ai.env
+
+# Run the main application (interactive mode)
+python main.py
+
+# Or run with a specific question
+python main.py "What is artificial intelligence?"
+```
+
+**Expected Output**: The system will process your question through all 4 layers and display the **raw Layer 4 synthesis output** - a comprehensive epistemological narrative as originally planned in the build documents.
+
+### Running Tests
+
+#### Live End-to-End Test
+
+Run a complete 4-layer test with the Tezcatlipoca question:
+
+```bash
+# Activate virtual environment and load API key
+source venv/bin/activate
+source ~/.config/env.d/ai.env
+
+# Run the live test
+python live_test_tezcatlipoca.py
+```
+
+**Expected Output**: A comprehensive epistemological analysis processing through all 4 layers in ~8 seconds, including:
+
+- Layer 1: Question reformulation
+- Layer 2: Parallel definition generation (semantic, genealogical, teleological)
+- Layer 3: Multi-dimensional validation (correspondence, coherence, pragmatic)
+- Layer 4: Synthesis and narrative integration
+
+#### Unit Tests
+
+Run individual layer tests:
+
+```bash
+# Run all tests
+pytest
+
+# Run specific layer tests
+pytest tests/test_layer1_reformulator.py
+pytest tests/test_layer2_definition.py
+pytest tests/test_layer3_validation.py
+pytest tests/test_layer4_synthesis.py
+
+# Run with coverage
+pytest --cov=core --cov=layers
+```
+
+#### Custom Test Questions
+
+To test with different questions, modify the `question` variable in `live_test_tezcatlipoca.py`:
+
+```python
+# Example: Test with a different question
+question = "What is the significance of quantum entanglement in modern physics?"
+```
+
+### Test Results Interpretation
+
+Successful test output includes:
+
+- **Performance metrics**: Layer-by-layer timing (typically 1-4 seconds each)
+- **Raw Layer 4 output**: Complete holistic narrative synthesis as originally planned
+- **Total processing time**: Usually 6-10 seconds for complete 4-layer processing
+- **Error-free execution**: No exceptions or API failures
+
+### Troubleshooting
+
+**Common Issues:**
+
+- **Missing API Key**: Ensure `GROQ_API_KEY` environment variable is set in `~/.config/env.d/ai.env`
+- **Invalid API Key**: Verify your key starts with `gsk_` and is active in your Groq console
+- **Virtual Environment**: Always activate venv before running tests
+- **Dependencies**: Run `pip install -r requirements.txt` if import errors occur
+- **Network Issues**: Check internet connection for Groq API access
+
+**Performance Notes:**
+
+- Layer 2 and 3 use parallel processing for optimal performance
+- Layer 4 synthesis may take longer due to complex narrative integration
+- Total processing time scales with question complexity
+
 ## Documentation
 
 This project includes comprehensive documentation covering all aspects of the Epistemological Propagation Network:

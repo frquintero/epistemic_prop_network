@@ -78,35 +78,10 @@ class ReformulatedQuestion(BaseModel):
 class SynthesisOutput(BaseModel):
     """Structure for final synthesis output from Phase 4."""
 
-    thesis: str = Field(
+    raw_response: str = Field(
         ...,
-        description="Main thesis statement encapsulating core insight",
-        min_length=20
-    )
-    definition: str = Field(
-        ...,
-        description="Integrated definition from Phase 2",
-        min_length=10
-    )
-    history: str = Field(
-        ...,
-        description="Integrated historical account from Phase 2",
-        min_length=10
-    )
-    function: str = Field(
-        ...,
-        description="Integrated functional analysis from Phase 2",
-        min_length=10
-    )
-    validation_qualifications: str = Field(
-        ...,
-        description="Integrated validation results from Phase 3",
-        min_length=10
-    )
-    narrative: str = Field(
-        ...,
-        description="Complete narrative synthesis",
-        min_length=50
+        description="Raw LLM response from Layer 4 synthesis",
+        min_length=1
     )
 
 
