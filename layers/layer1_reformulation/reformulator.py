@@ -367,23 +367,3 @@ REFORMULATED QUESTION:"""
                 context_added.append(label)
 
         return context_added
-
-    async def health_check(self) -> bool:
-        """Perform a health check on the Reformulator.
-
-        Returns:
-            bool: True if healthy, False otherwise
-        """
-        try:
-            test_request = NetworkRequest(
-                request_id="health-check",
-                original_question="What is epistemology?",
-                timestamp=datetime.now().isoformat()
-            )
-
-            result = await self.process(test_request)
-            return len(result.question) > 10
-
-        except Exception as e:
-            self.logger.error("Health check failed | error=%s", e)
-            return False

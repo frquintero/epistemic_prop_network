@@ -2,20 +2,106 @@
 
 This document describes the agent architecture for the Epistemic LLM Network, detailing the roles, responsibilities, and interactions of each agent within the four-layer propagation system.
 
+## Implementation Status
+
+### ✅ Completed Layers
+- **Layer 1**: Reformulator Agent (Fully implemented)
+- **Layer 2**: Definition Generation Agents (Fully implemented)
+  - Semantic Node ✅
+  - Genealogical Node ✅
+  - Teleological Node ✅
+
+### 🚧 In Development
+- **Layer 3**: Validation Agents (Planned)
+  - Correspondence Validator 🚧
+  - Coherence Validator 🚧
+  - Pragmatic Validator 🚧
+- **Layer 4**: Synthesis Node (Planned)
+
 ## Agent Overview
 
 The network employs specialized agents that operate in sequence across four layers:
 
-| Layer | Agent Type | Role |
-|-------|------------|------|
-| 1 | Reformulator | Purifies and contextualizes raw user input |
-| 2 | Semantic Node | Generates precise conceptual definitions |
-| 2 | Genealogical Node | Traces historical evolution of concepts |
-| 2 | Teleological Node | Analyzes purpose and functional utility |
-| 3 | Correspondence Validator | Tests alignment with empirical evidence |
-| 3 | Coherence Validator | Ensures logical consistency |
-| 3 | Pragmatic Validator | Evaluates real-world applicability |
-| 4 | Synthesis Node | Integrates validated insights into narrative output |
+| Layer | Agent Type | Status | Role |
+|-------|------------|--------|------|
+| 1 | Reformulator | ✅ | Purifies and contextualizes raw user input |
+| 2 | Semantic Node | ✅ | Generates precise conceptual definitions |
+| 2 | Genealogical Node | ✅ | Traces historical evolution of concepts |
+| 2 | Teleological Node | ✅ | Analyzes purpose and functional utility |
+| 3 | Correspondence Validator | 🚧 | Tests alignment with empirical evidence |
+| 3 | Coherence Validator | 🚧 | Ensures logical consistency |
+| 3 | Pragmatic Validator | 🚧 | Evaluates real-world applicability |
+| 4 | Synthesis Node | 🚧 | Integrates validated insights into narrative output |
+
+## Current Implementation Details
+
+### Layer 1: Reformulator Agent ✅
+
+**Status**: Fully implemented and tested
+**Location**: `layers/layer1_reformulation/reformulator.py`
+
+**Responsibilities**:
+- Accepts raw user questions (e.g., "What are mental models?")
+- Eliminates bias, loaded language, and framing effects
+- Distills the core epistemological intent (definition, history, function)
+- Crafts optimized LLM prompts with comprehensive bias analysis framework
+- Outputs reformulated, context-aware questions with ~150-word limit for efficiency
+
+**Key Features**:
+- Advanced bias detection and elimination
+- Epistemological context embedding
+- Structured prompt engineering
+- Async processing with error handling
+- Clean data output (no cross-layer payload)
+
+### Layer 2: Definition Generation Agents ✅
+
+**Status**: Fully implemented with parallel processing
+**Location**: `layers/layer2_definition/`
+**Architecture**: Concurrent execution using `asyncio.gather`
+
+#### Semantic Node ✅
+**Location**: `layers/layer2_definition/semantic_node.py`
+
+**Responsibilities**:
+- Focuses on linguistic structure, etymology, and logical relationships
+- Produces strict conceptual definitions with academic rigor
+- Includes etymological analysis and semantic field mapping
+- Maintains ~150-word response limit for efficiency
+
+**Example Output**: Comprehensive semantic analysis of "mental model" including Latin etymology (*mens*, *modellus*), grammatical structure, and logical hierarchies.
+
+#### Genealogical Node ✅
+**Location**: `layers/layer2_definition/genealogical_node.py`
+
+**Responsibilities**:
+- Traces historical origin and evolution of concepts
+- Identifies key contributors and paradigm shifts
+- Provides chronological historical narratives
+- Connects concepts to broader intellectual movements
+
+**Example Output**: Historical account from Aristotle (350 BCE) through modern cognitive neuroscience, including key figures like Craik, Johnson-Laird, and contemporary researchers.
+
+#### Teleological Node ✅
+**Location**: `layers/layer2_definition/teleological_node.py`
+
+**Responsibilities**:
+- Analyzes purpose, utility, and functional role
+- Evaluates practical applications in real-world contexts
+- Explains how concepts enable action and problem-solving
+- Connects to human cognitive and behavioral processes
+
+**Example Output**: Functional analysis of mental models as cognitive tools for prediction, decision-making, and problem-solving across education, design, and organizational contexts.
+
+### Layer 2 Parallel Execution ✅
+**Location**: `layers/layer2_definition/manager.py`
+
+**Features**:
+- Concurrent processing of all three nodes using `asyncio.gather`
+- Error handling with fallback responses
+- Structured output in `Phase2Triple` format
+- Performance optimization with ~1.2 second execution time
+- Clean data flow without cross-contamination
 
 ## Agent Responsibilities
 

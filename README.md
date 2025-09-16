@@ -6,33 +6,44 @@ A sophisticated multi-layer LLM system for rigorous epistemological inquiry, imp
 
 The Epistemological Propagation Network employs specialized agents that operate in sequence across four layers:
 
-1. **Reformulator**: Purifies and contextualizes raw user input
-2. **Definition Generation**: Creates precise conceptual definitions from semantic, genealogical, and teleological perspectives
-3. **Validation**: Tests alignment with empirical evidence, logical consistency, and practical utility
-4. **Synthesis**: Integrates validated insights into comprehensive narrative output
+1. **Reformulator** ✅: Purifies and contextualizes raw user input
+2. **Definition Generation** ✅: Creates precise conceptual definitions from semantic, genealogical, and teleological perspectives
+3. **Validation** 🚧: Tests alignment with empirical evidence, logical consistency, and practical utility
+4. **Synthesis** 🚧: Integrates validated insights into comprehensive narrative output
+
+## Current Implementation Status
+
+### ✅ Completed Layers
+- **Layer 1**: Input purification and context establishment (Reformulator)
+- **Layer 2**: Multi-perspective definition generation (Semantic, Genealogical, Teleological nodes)
+
+### 🚧 In Development
+- **Layer 3**: Multi-dimensional validation (Correspondence, Coherence, Pragmatic validators)
+- **Layer 4**: Knowledge synthesis and narrative construction
 
 ## Architecture
 
 ### Layer Structure
-- **Layer 1**: Input purification and context establishment
-- **Layer 2**: Multi-perspective definition generation (Semantic, Genealogical, Teleological)
-- **Layer 3**: Multi-dimensional validation (Correspondence, Coherence, Pragmatic)
+- **Layer 1**: Input purification and epistemological framing
+- **Layer 2**: Parallel definition generation (3 specialized nodes)
+- **Layer 3**: Multi-dimensional validation (3 validator types)
 - **Layer 4**: Knowledge synthesis and narrative construction
 
 ### Data Flow
-```
-Raw Input → Layer 1 → Layer 2 → Layer 3 → Layer 4 → Final Output
+
+```mermaid
+Raw Input → Layer 1 → Layer 2 (Parallel) → Layer 3 → Layer 4 → Final Output
 ```
 
 ## Features
 
 - **Bias Resistance**: Multi-agent validation prevents single-perspective bias
-- **Evidence-Based**: Correspondence validation ensures empirical grounding
-- **Comprehensive**: Genealogical analysis provides historical context
-- **Practical**: Teleological and pragmatic validation ensure real-world utility
-- **Structured Output**: JSON-based data contracts between layers
-- **Async Processing**: Concurrent LLM requests for performance
+- **Parallel Processing**: Concurrent LLM requests for Layer 2 efficiency
+- **Structured Output**: Pydantic-based data contracts between layers
+- **Async Processing**: High-performance concurrent operations
 - **Robust Error Handling**: Comprehensive exception handling and retry logic
+- **Optimized Token Usage**: 150-word response limits for efficiency
+- **Clean Data Flow**: No cross-layer payload contamination
 
 ## Installation
 
@@ -51,15 +62,20 @@ export GROQ_API_KEY="your-groq-api-key-here"
 ## Usage
 
 ```python
-from core.config import init_config
-from layers.layer1 import ReformulatorAgent
+from core.config import init_config, NetworkConfig
+from layers.layer1_reformulation.reformulator import Reformulator
+from layers.layer2_definition.manager import Layer2DefinitionManager
 
 # Initialize configuration
-init_config()
+config = init_config(NetworkConfig.from_env())
 
-# Create and run the network
-reformulator = ReformulatorAgent()
-result = await reformulator.process("What are mental models?")
+# Layer 1: Reformulate input
+reformulator = Reformulator()
+reformulated = await reformulator.process(user_input)
+
+# Layer 2: Generate definitions
+manager = Layer2DefinitionManager()
+definitions = await manager.process(reformulated)
 ```
 
 ## Configuration
@@ -71,25 +87,54 @@ The system uses environment variables for configuration:
 - `MAX_CONCURRENT_REQUESTS`: Concurrent requests (default: 3)
 - `REQUEST_TIMEOUT`: Request timeout in seconds (default: 120.0)
 - `LOG_LEVEL`: Logging level (default: "INFO")
+- `MOCK_RESPONSES`: Use mock responses for testing (default: false)
+
+## Project Structure
+
+```
+epistemic-llm-network/
+├── core/                          # Core infrastructure
+│   ├── config.py                 # Configuration management
+│   ├── exceptions.py             # Custom exceptions
+│   ├── llm_client.py             # Groq API client
+│   ├── logging_config.py         # Structured logging
+│   └── schemas.py                # Pydantic data models
+├── layers/                       # Agent layers
+│   ├── layer1_reformulation/     # Layer 1 implementation
+│   │   └── reformulator.py       # Reformulator agent
+│   └── layer2_definition/        # Layer 2 implementation
+│       ├── semantic_node.py      # Semantic analysis
+│       ├── genealogical_node.py  # Historical analysis
+│       ├── teleological_node.py  # Functional analysis
+│       └── manager.py            # Parallel execution manager
+├── tests/                        # Test suite
+├── docs/                         # Documentation
+├── pyproject.toml               # Project configuration
+└── requirements.txt             # Dependencies
+```
+
+## API Reference
+
+### Core Classes
+
+- `NetworkConfig`: Main configuration management
+- `LLMClient`: Groq API integration with retry logic
+- `NetworkRequest`: Input data structure
+- `ReformulatedQuestion`: Layer 1 output
+- `Phase2Triple`: Layer 2 output (semantic, genealogical, teleological)
+
+### Agent Classes
+
+- `Reformulator`: Layer 1 input purification
+- `SemanticNode`: Semantic definition generation
+- `GenealogicalNode`: Historical evolution analysis
+- `TeleologicalNode`: Functional utility analysis
+- `Layer2DefinitionManager`: Parallel execution coordinator
 
 ## Development
 
-### Project Structure
-```
-epistemic-llm-network/
-├── core/                 # Core infrastructure
-│   ├── config.py        # Configuration management
-│   ├── exceptions.py    # Custom exceptions
-│   ├── llm_client.py    # Groq API client
-│   └── schemas.py       # Pydantic data models
-├── layers/              # Agent layers
-├── utils/               # Utility functions
-├── tests/               # Test suite
-├── pyproject.toml       # Project configuration
-└── requirements.txt     # Dependencies
-```
-
 ### Testing
+
 ```bash
 # Run all tests
 pytest
@@ -101,25 +146,13 @@ pytest --cov=core --cov=layers
 pytest tests/test_core.py
 ```
 
-## API Reference
+### Key Design Principles
 
-### Core Classes
-
-- `NetworkConfig`: Main configuration management
-- `LLMClient`: Groq API integration with retry logic
-- `Phase2Triple`: Layer 2 output data structure
-- `Phase3Triple`: Layer 3 output data structure
-
-### Agent Classes
-
-- `ReformulatorAgent`: Layer 1 processing
-- `SemanticNode`: Semantic definition generation
-- `GenealogicalNode`: Historical analysis
-- `TeleologicalNode`: Purpose analysis
-- `CorrespondenceValidator`: Empirical validation
-- `CoherenceValidator`: Logical consistency
-- `PragmaticValidator`: Practical utility
-- `SynthesisNode`: Final integration
+1. **Clean Data Flow**: No cross-layer payload contamination
+2. **Token Efficiency**: 150-word response limits for downstream processing
+3. **Parallel Execution**: Concurrent LLM requests for performance
+4. **Structured Logging**: Comprehensive request/response tracking
+5. **Error Resilience**: Graceful failure handling with fallbacks
 
 ## Contributing
 
