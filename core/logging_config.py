@@ -119,11 +119,16 @@ def get_logger(name: str) -> Any:
     Returns:
         Logger instance (structlog or standard logging)
     """
-    if STRUCTLOG_AVAILABLE and get_config().enable_structured_logging:
+    config = None
+    try:
+        config = get_config()
+    except RuntimeError:
+        pass
+
+    if STRUCTLOG_AVAILABLE and config and config.enable_structured_logging:
         import structlog
         return structlog.get_logger(name)
-    else:
-        return logging.getLogger(name)
+    return logging.getLogger(name)
 
 
 class LoggerMixin:

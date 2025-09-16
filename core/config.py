@@ -43,7 +43,7 @@ class NetworkConfig(BaseModel):
         default=0.9,
         description="LLM temperature for generation (0.9 for creative responses)",
         ge=0.0,
-        le=2.0
+        le=1.0
     )
     max_tokens_per_request: int = Field(
         default=8192,
@@ -97,6 +97,24 @@ class NetworkConfig(BaseModel):
         if not v:
             raise ValueError("GROQ_API_KEY must be provided either as parameter or environment variable")
         return v
+
+    @field_validator("max_concurrent_requests", mode="before")
+    @classmethod
+    def validate_max_concurrent_requests(cls, v: int) -> int:
+        """Ensure max_concurrent_requests stays within documented bounds."""
+        value = int(v)
+        if not 1 <= value <= 10:
+            raise ValueError("max_concurrent_requests must be between 1 and 10")
+        return value
+
+    @field_validator("temperature", mode="before")
+    @classmethod
+    def validate_temperature(cls, v: float) -> float:
+        """Restrict temperature to supported range for tests and docs."""
+        value = float(v)
+        if not 0.0 <= value <= 1.0:
+            raise ValueError("temperature must be between 0.0 and 1.0")
+        return value
 
     @classmethod
     def from_env(cls) -> "NetworkConfig":

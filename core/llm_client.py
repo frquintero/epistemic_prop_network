@@ -3,15 +3,13 @@
 import asyncio
 import json
 import os
-from typing import Any, Dict, List, Optional, Union
-from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
 
-import httpx
 import structlog
 from groq import AsyncGroq, Groq
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
-from .schemas import NetworkRequest, NetworkResponse
+from core.config import NetworkConfig, get_config
 
 
 logger = structlog.get_logger(__name__)
@@ -30,14 +28,17 @@ class LLMConfig(BaseModel):
     timeout: float = 120.0
     max_retries: int = 3
     retry_delay: float = 1.0
+    mock_responses: bool = False
 
     def __init__(self, **data):
         super().__init__(**data)
         if not self.api_key:
             self.api_key = os.getenv("GROQ_API_KEY", "")
+        if "mock_responses" not in data:
+            self.mock_responses = os.getenv("MOCK_RESPONSES", "false").lower() == "true"
 
     @classmethod
-    def from_network_config(cls, network_config) -> "LLMConfig":
+    def from_network_config(cls, network_config: NetworkConfig) -> "LLMConfig":
         """Create LLMConfig from NetworkConfig for consistency."""
         return cls(
             api_key=network_config.groq_api_key,
@@ -49,19 +50,37 @@ class LLMConfig(BaseModel):
             tools=network_config.tools,
             timeout=network_config.request_timeout,
             max_retries=network_config.max_retries,
+            mock_responses=network_config.mock_responses,
         )
 
 
 class LLMClient:
     """Base LLM client for Groq integration with structured outputs support."""
 
-    def __init__(self, config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        config: Optional[LLMConfig] = None,
+        network_config: Optional[NetworkConfig] = None
+    ):
         """Initialize the LLM client.
 
         Args:
             config: LLM configuration. If None, uses default config.
         """
-        self.config = config or LLMConfig()
+        if config is not None:
+            self.config = config
+        else:
+            resolved_network_config = network_config
+            if resolved_network_config is None:
+                try:
+                    resolved_network_config = get_config()
+                except RuntimeError:
+                    resolved_network_config = None
+
+            if resolved_network_config is not None:
+                self.config = LLMConfig.from_network_config(resolved_network_config)
+            else:
+                self.config = LLMConfig()
         self._client = None
         self._async_client = None
 
@@ -123,6 +142,10 @@ class LLMClient:
         if response_format:
             params["response_format"] = response_format
 
+        if self.config.mock_responses:
+            logger.debug("Returning mock LLM response", params=params)
+            return self._build_mock_text_response(prompt)
+
         for attempt in range(self.config.max_retries):
             try:
                 logger.info("Making LLM request", attempt=attempt + 1)
@@ -179,6 +202,10 @@ class LLMClient:
         if response_format:
             params["response_format"] = response_format
 
+        if self.config.mock_responses:
+            logger.debug("Returning mock synchronous LLM response", params=params)
+            return self._build_mock_text_response(prompt)
+
         for attempt in range(self.config.max_retries):
             try:
                 logger.info("Making synchronous LLM request", attempt=attempt + 1)
@@ -221,6 +248,10 @@ class LLMClient:
             }
         }
 
+        if self.config.mock_responses:
+            logger.debug("Returning mock structured LLM response", schema=schema)
+            return self._build_mock_structured_response(schema)
+
         response_text = await self.generate_text(
             prompt=prompt,
             system_message=system_message,
@@ -240,6 +271,9 @@ class LLMClient:
         Returns:
             True if service is healthy, False otherwise
         """
+        if self.config.mock_responses:
+            return True
+
         try:
             # Simple test request
             response = self.client.chat.completions.create(
@@ -259,6 +293,9 @@ class LLMClient:
         Returns:
             True if service is healthy, False otherwise
         """
+        if self.config.mock_responses:
+            return True
+
         try:
             response = await self.async_client.chat.completions.create(
                 model=self.config.model,
@@ -270,6 +307,36 @@ class LLMClient:
         except Exception as e:
             logger.error("Async health check failed", error=str(e))
             return False
+
+    def _build_mock_text_response(self, prompt: str) -> str:
+        """Generate a deterministic mock response for testing."""
+        lines = [line.strip() for line in prompt.splitlines() if line.strip()]
+        for line in reversed(lines):
+            if line.endswith("?"):
+                return line
+            if line.upper().startswith("REFORMULATED QUESTION"):
+                break
+        return "Mock reformulated question for testing?"
+
+    def _build_mock_structured_response(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Build a mock structured response matching the schema shape."""
+        properties = schema.get("properties", {})
+        mock_result: Dict[str, Any] = {}
+        for key, value in properties.items():
+            value_type = value.get("type")
+            if value_type == "string":
+                mock_result[key] = f"mock_{key}"
+            elif value_type == "number" or value_type == "integer":
+                mock_result[key] = 0
+            elif value_type == "boolean":
+                mock_result[key] = True
+            elif value_type == "array":
+                mock_result[key] = []
+            elif value_type == "object":
+                mock_result[key] = {}
+            else:
+                mock_result[key] = None
+        return mock_result
 
 
 # Global client instance

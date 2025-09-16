@@ -98,13 +98,48 @@ class MockLLMClient:
         elif "pragmatic" in prompt.lower():
             return self.responses.get("pragmatic", "Mock pragmatic response")
         else:
+            # For reformulator prompts, return a proper epistemological question based on the input
+            if "reformulate" in prompt.lower() or "epistemological" in prompt.lower():
+                if "mental models" in prompt.lower():
+                    return "What is the conceptual definition, theoretical basis, and functional role of mental models in cognitive science, and how are they empirically investigated and evaluated?"
+                elif "israel" in prompt.lower() or "palestine" in prompt.lower():
+                    return "What historical, political, economic, and sociocultural factors have contributed to the prolonged nature of the Israeli-Palestinian conflict, as examined within the disciplines of Middle Eastern studies, international relations, and conflict resolution?"
+                elif "politicians" in prompt.lower() or "country" in prompt.lower():
+                    return "How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?"
+                else:
+                    return "What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?"
             return "Mock LLM response"
 
     def generate_text_sync(self, prompt: str, **kwargs) -> str:
         """Mock synchronous generate_text method."""
         self.call_count += 1
         self.last_call_args = {"prompt": prompt, **kwargs}
-        return "Mock synchronous LLM response"
+        
+        # Return mock response based on prompt content
+        if "semantic" in prompt.lower():
+            return self.responses.get("semantic", "Mock semantic response")
+        elif "genealogical" in prompt.lower():
+            return self.responses.get("genealogical", "Mock genealogical response")
+        elif "teleological" in prompt.lower():
+            return self.responses.get("teleological", "Mock teleological response")
+        elif "correspondence" in prompt.lower():
+            return self.responses.get("correspondence", "Mock correspondence response")
+        elif "coherence" in prompt.lower():
+            return self.responses.get("coherence", "Mock coherence response")
+        elif "pragmatic" in prompt.lower():
+            return self.responses.get("pragmatic", "Mock pragmatic response")
+        else:
+            # For reformulator prompts, return a proper epistemological question based on the input
+            if "reformulate" in prompt.lower() or "epistemological" in prompt.lower():
+                if "mental models" in prompt.lower():
+                    return "What is the conceptual definition, theoretical basis, and functional role of mental models in cognitive science, and how are they empirically investigated and evaluated?"
+                elif "israel" in prompt.lower() or "palestine" in prompt.lower():
+                    return "What historical, political, economic, and sociocultural factors have contributed to the prolonged nature of the Israeli-Palestinian conflict, as examined within the disciplines of Middle Eastern studies, international relations, and conflict resolution?"
+                elif "politicians" in prompt.lower() or "country" in prompt.lower():
+                    return "How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?"
+                else:
+                    return "What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?"
+            return "Mock synchronous LLM response"
 
 
 @pytest.fixture
@@ -126,7 +161,32 @@ class AsyncMockLLMClient:
         await asyncio.sleep(0.01)  # Simulate async operation
         self.call_count += 1
         self.last_call_args = {"prompt": prompt, **kwargs}
-        return "Mock async LLM response"
+
+        # Return mock response based on prompt content - same logic as MockLLMClient
+        if "semantic" in prompt.lower():
+            return self.responses.get("semantic", "Mock semantic response")
+        elif "genealogical" in prompt.lower():
+            return self.responses.get("genealogical", "Mock genealogical response")
+        elif "teleological" in prompt.lower():
+            return self.responses.get("teleological", "Mock teleological response")
+        elif "correspondence" in prompt.lower():
+            return self.responses.get("correspondence", "Mock correspondence response")
+        elif "coherence" in prompt.lower():
+            return self.responses.get("coherence", "Mock coherence response")
+        elif "pragmatic" in prompt.lower():
+            return self.responses.get("pragmatic", "Mock pragmatic response")
+        else:
+            # For reformulator prompts, return a proper epistemological question based on the input
+            if "reformulate" in prompt.lower() or "epistemological" in prompt.lower():
+                if "mental models" in prompt.lower():
+                    return "What is the conceptual definition, theoretical basis, and functional role of mental models in cognitive science, and how are they empirically investigated and evaluated?"
+                elif "israel" in prompt.lower() or "palestine" in prompt.lower():
+                    return "What historical, political, economic, and sociocultural factors have contributed to the prolonged nature of the Israeli-Palestinian conflict, as examined within the disciplines of Middle Eastern studies, international relations, and conflict resolution?"
+                elif "politicians" in prompt.lower() or "country" in prompt.lower():
+                    return "How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?"
+                else:
+                    return "What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?"
+            return "Mock async LLM response"
 
     async def generate_structured_output(self, prompt: str, schema: Any, **kwargs) -> Dict[str, Any]:
         """Async mock generate_structured_output method."""

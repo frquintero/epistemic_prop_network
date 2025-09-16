@@ -72,42 +72,6 @@ class TestReformulator:
         assert "amazing" not in result
         assert len(bias_removed) > 0
 
-    def test_enrich_context(self, reformulator):
-        """Test context enrichment."""
-        # Test definition context
-        result, context_added = reformulator._enrich_context("What is the definition of mental models?")
-        assert "seeking to understand the conceptual definition" in result
-        assert len(context_added) > 0
-
-        # Test history context
-        result, context_added = reformulator._enrich_context("What is the history of mental models?")
-        assert "tracing the historical development" in result
-        assert len(context_added) > 0
-
-        # Test function context
-        result, context_added = reformulator._enrich_context("What is the function of mental models?")
-        assert "analyzing the purpose, utility" in result
-        assert len(context_added) > 0
-
-    def test_validate_reformulation(self, reformulator):
-        """Test reformulation validation."""
-        # Valid question
-        result = reformulator._validate_reformulation("What are mental models?")
-        assert result == "What are mental models?"
-
-        # Too short
-        with pytest.raises(Exception):  # LayerProcessingError
-            reformulator._validate_reformulation("Hi")
-
-        # Too long
-        long_question = "What " * 100 + "are mental models?"
-        with pytest.raises(Exception):  # LayerProcessingError
-            reformulator._validate_reformulation(long_question)
-
-        # Non-epistemological
-        with pytest.raises(Exception):  # LayerProcessingError
-            reformulator._validate_reformulation("Hello world")
-
     def test_build_reformulation_prompt(self, reformulator):
         """Test prompt building."""
         question = "What are mental models?"
@@ -138,27 +102,21 @@ class TestReformulator:
         assert result == "What are mental models?"
 
     @pytest.mark.asyncio
-    @patch('layers.layer1_reformulation.reformulator.LLMClient')
-    async def test_process_with_mock_llm(self, mock_llm_class, reformulator, sample_request):
+    async def test_process_with_mock_llm(self, async_mock_llm_client, reformulator, sample_request):
         """Test full processing pipeline with mocked LLM."""
-        # Setup mock
-        mock_llm = AsyncMock()
-        mock_llm.generate_text.return_value = "What are mental models from an epistemological perspective?"
-        mock_llm_class.return_value = mock_llm
-
-        # Create reformulator with mock
-        reformulator_with_mock = Reformulator(mock_llm)
+        # Use the async mock LLM client from conftest.py
+        reformulator_with_mock = Reformulator(async_mock_llm_client)
 
         # Process request
         result = await reformulator_with_mock.process(sample_request)
 
-        # Verify LLM was called
-        mock_llm.generate_text.assert_called_once()
-
         # Verify result
         from core.schemas import ReformulatedQuestion
         assert isinstance(result, ReformulatedQuestion)
-        assert len(result.question) > 10
+        # The mock should return a proper epistemological question
+        assert "epistemological" in result.question.lower() or "conceptual definition" in result.question.lower()
+        # LLM handles context embedding internally
+        assert "LLM handles context embedding internally" in result.context_added[0]
 
     @pytest.mark.asyncio
     async def test_process_error_handling(self, reformulator):

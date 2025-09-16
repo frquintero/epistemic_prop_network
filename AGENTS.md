@@ -24,8 +24,8 @@ The network employs specialized agents that operate in sequence across four laye
 - Accepts raw user questions (e.g., "What are mental models?")
 - Eliminates bias, loaded language, and framing effects
 - Distills the core epistemological intent (definition, history, function)
-- Adds neutral factual context without providing answers
-- Outputs a refined, context-aware question for downstream processing
+- Crafts a single LLM prompt that instructs the model to perform internal validation and generate neutral epistemic context
+- Outputs the LLM's reformulated, context-aware question with LLM's own validation (no external validation layer)
 
 ### Layer 2: Definition Generation Agents
 

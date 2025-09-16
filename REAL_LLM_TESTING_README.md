@@ -8,7 +8,7 @@ This script provides comprehensive testing of the Reformulator agent with real L
 - ✅ **Interactive Testing**: Input questions at runtime
 - ✅ **Comprehensive Logging**: Captures all intermediate steps
 - ✅ **Markdown Reports**: Generates detailed test reports
-- ✅ **Step-by-Step Analysis**: Shows sanitization, LLM interaction, context enrichment, and validation
+- ✅ **Step-by-Step Analysis**: Shows sanitization, LLM interaction, response inspection, and validation
 - ✅ **Phase-Specific Configuration**: LLM parameters (temperature, reasoning effort, tools) vary by epistemological layer requirements
 
 ## Setup
@@ -31,10 +31,10 @@ The script will prompt you to enter questions. For each question, it will:
 
 1. **Sanitize Input**: Remove basic bias and clean the text
 2. **Build LLM Prompt**: Create the sophisticated epistemic framework prompt
-3. **Call Real LLM**: Send prompt to Groq GPT-OSS-120B
+3. **Call Real LLM**: Send prompt to Groq GPT-OSS-120B (LLM performs internal validation)
 4. **Extract Response**: Parse the LLM's reformulation
-5. **Enrich Context**: Add epistemic framing and disciplinary perspective
-6. **Validate**: Ensure the final question meets quality standards
+5. **Inspect Response**: Capture context markers embedded by the LLM
+6. **Trust LLM Validation**: Accept the LLM's self-validated output (no external validation)
 
 ## Example Session
 
@@ -55,7 +55,7 @@ Enter a question to test (or 'quit' to exit):
 📝 Original: Why are incompetent politicians making our country worse?
 🔄 Final: How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
 🧹 Bias removed: 3
-📚 Context added: 2
+📚 Context markers detected: 2
 
 ========================================
 Enter a question to test (or 'quit' to exit):
@@ -77,7 +77,7 @@ The generated Markdown report includes:
   - Full prompt sent to LLM
   - Raw LLM response
   - Extracted reformulation
-  - Context enrichment details
+  - Detected context markers within the LLM response
   - Final validation results
 - **Final Results**: Complete reformulated question with metadata
 
@@ -116,13 +116,13 @@ You are an epistemological reformulator specializing in bias elimination...
 [full prompt]
 ```
 
-#### Raw LLM Response
+### Raw LLM Response
 
 ```text
 How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
 ```
 
-#### Extracted Reformulation
+### Extracted Reformulation
 
 **Result:** How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
 **Bias Detected:** ['LLM bias elimination applied']
@@ -133,11 +133,11 @@ How do differing interpretations of governmental effectiveness shape public disc
 **Enriched:** From multiple disciplinary and interpretive perspectives, how do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
 **Context Added:** ['epistemic framing: multi-perspective analysis']
 
-### ✅ Step 4: Final Validation
+### ✅ Step 4: LLM Self-Validation
 
 **Input:** From multiple disciplinary and interpretive perspectives, how do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
-**Validated:** From multiple disciplinary and interpretive perspectives, how do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
-**Validation Passed:** true
+**LLM Validated:** From multiple disciplinary and interpretive perspectives, how do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?
+**Validation:** Handled internally by LLM
 
 ### 🎯 Final Result
 

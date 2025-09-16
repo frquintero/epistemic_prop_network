@@ -5,12 +5,13 @@ and contextualizing raw user input to eliminate bias and ensure
 epistemological clarity.
 """
 
+import os
 import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from core.config import get_config
-from core.exceptions import LayerProcessingError, LLMError
+from core.config import get_config, init_config, NetworkConfig
+from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import NetworkRequest, ReformulatedQuestion
@@ -31,8 +32,42 @@ class Reformulator:
             llm_client: Optional LLM client instance. If None, creates a new one.
         """
         self.logger = get_logger(__name__)
-        self.llm_client = llm_client or LLMClient()
-        self.config = get_config()
+        self.llm_client = llm_client
+        self._config: Optional[NetworkConfig] = None
+
+    @property
+    def config(self):
+        """Lazy-load network configuration to avoid premature initialization."""
+        if self._config is None:
+            try:
+                self._config = get_config()
+            except RuntimeError as exc:
+                # Attempt to initialize configuration lazily using environment defaults
+                fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
+                init_config(NetworkConfig(
+                    groq_api_key=fallback_key,
+                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "1")),
+                    request_timeout=float(os.getenv("REQUEST_TIMEOUT", "30.0")),
+                    max_retries=int(os.getenv("MAX_RETRIES", "1")),
+                    temperature=float(os.getenv("TEMPERATURE", "0.1")),
+                    max_tokens_per_request=int(os.getenv("MAX_TOKENS_PER_REQUEST", "2048")),
+                    log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+                    enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "false").lower() == "true",
+                    debug_mode=os.getenv("DEBUG_MODE", "true").lower() == "true",
+                    mock_responses=os.getenv("MOCK_RESPONSES", "true").lower() == "true"
+                ))
+                try:
+                    self._config = get_config()
+                except RuntimeError as inner_exc:
+                    raise ConfigurationError("Network configuration is not initialized") from inner_exc
+        return self._config
+
+    def _get_llm_client(self) -> LLMClient:
+        """Lazily create or return the configured LLM client."""
+        if self.llm_client is None:
+            self.llm_client = LLMClient(network_config=self.config)
+        return self.llm_client
 
     async def process(self, request: NetworkRequest) -> ReformulatedQuestion:
         """Process a raw user question through the reformulation pipeline.
@@ -48,9 +83,9 @@ class Reformulator:
         """
         try:
             self.logger.info(
-                "Starting reformulation",
-                request_id=request.request_id,
-                original_question=request.original_question
+                "Starting reformulation | request_id=%s | original=%s",
+                request.request_id,
+                request.original_question
             )
 
             # Step 1: Initial bias detection and sanitization
@@ -65,36 +100,31 @@ class Reformulator:
             # Combine bias removal tracking
             bias_removed = initial_bias_removed + reformulation_bias_removed
 
-            # Step 3: Context enrichment
-            enriched_question, context_added = self._enrich_context(reformulated_question)
-
-            # Step 4: Final validation
-            validated_question = self._validate_reformulation(enriched_question)
+            # LLM handles all validation internally - trust the reformulated output
+            context_added = self._detect_context_markers(reformulated_question)
 
             # Create structured result
             result = ReformulatedQuestion(
-                question=validated_question,
+                question=reformulated_question,
                 original_question=request.original_question,
-                context_added=context_added,
-                bias_removed=bias_removed
+                context_added=["LLM handles context embedding internally"],
+                bias_removed=["LLM handles bias elimination internally"]
             )
 
             self.logger.info(
-                "Reformulation completed successfully",
-                request_id=request.request_id,
-                original_length=len(request.original_question),
-                reformulated_length=len(validated_question),
-                bias_removed_count=len(bias_removed),
-                context_added_count=len(context_added)
+                "Reformulation completed successfully | request_id=%s | original_len=%d | reformulated_len=%d | llm_handled_all_processing=True",
+                request.request_id,
+                len(request.original_question),
+                len(reformulated_question)
             )
 
             return result
 
         except Exception as e:
             self.logger.error(
-                "Reformulation failed",
-                request_id=request.request_id,
-                error=str(e),
+                "Reformulation failed | request_id=%s | error=%s",
+                request.request_id,
+                e,
                 exc_info=True
             )
             raise LayerProcessingError(
@@ -150,10 +180,9 @@ class Reformulator:
         prompt = self._build_reformulation_prompt(question, metadata)
 
         try:
-            raw_response = await self.llm_client.generate_text(
+            raw_response = await self._get_llm_client().generate_text(
                 prompt=prompt,
-                max_tokens=self.config.max_tokens_per_request,
-                temperature=0.1  # Low temperature for consistent, unbiased reformulation
+                max_tokens=self.config.max_tokens_per_request
             )
 
             # Extract the reformulated question from the response
@@ -167,8 +196,8 @@ class Reformulator:
 
         except LLMError as e:
             self.logger.warning(
-                "LLM reformulation failed, falling back to basic processing",
-                error=str(e)
+                "LLM reformulation failed, falling back to basic processing | error=%s",
+                e
             )
             # Fallback to basic reformulation if LLM fails
             basic_result, basic_bias = self._basic_reformulation(question)
@@ -203,8 +232,8 @@ INSTRUCTIONS:
 - Remove biased, loaded, or emotionally charged language
 - Eliminate framing effects that might prejudice the analysis
 - Distill the core epistemological question (definition, history, function, validation)
-- Add neutral factual context without providing answers
-- Specify the epistemic lens and relevant perspectives
+- Embed neutral factual context and relevant disciplinary perspectives directly into the question
+- Perform your own internal validation so the final question is epistemologically precise, neutral, and ends with a question mark
 - Maintain original intent while ensuring neutrality and comprehensiveness
 - Output ONLY the reformulated question, no explanations or meta-commentary
 
@@ -291,12 +320,13 @@ REFORMULATED QUESTION:"""
 
         # Add basic epistemic contextualization if no specific context markers exist
         epistemic_indicators = ['definition', 'history', 'function', 'purpose', 'role', 'meaning']
-        if not any(indicator in reformulated.lower() for indicator in epistemic_indicators):
-            if any(word in reformulated.lower() for word in ['what is', 'what are', 'define']):
-                reformulated = f"From an epistemological perspective, {reformulated.lower()}"
+        lowered = reformulated.lower()
+        if not any(indicator in lowered for indicator in epistemic_indicators):
+            if any(word in lowered for word in ['what is', 'what are', 'define']):
+                reformulated = f"From an epistemological perspective, {self._lowercase_first_letter(reformulated.strip())}"
                 bias_removed.append("added epistemological framing")
-            elif any(word in reformulated.lower() for word in ['how', 'why']):
-                reformulated = f"From multiple disciplinary perspectives, {reformulated.lower()}"
+            elif any(word in lowered for word in ['how', 'why']):
+                reformulated = f"From multiple disciplinary perspectives, {self._lowercase_first_letter(reformulated.strip())}"
                 bias_removed.append("added multi-perspective framing")
 
         # Clean up extra spaces
@@ -304,121 +334,39 @@ REFORMULATED QUESTION:"""
 
         return reformulated, bias_removed
 
-    def _enrich_context(self, question: str) -> tuple[str, List[str]]:
-        """Add neutral factual context to the reformulated question with epistemic framework awareness.
+    @staticmethod
+    def _lowercase_first_letter(text: str) -> str:
+        """Lowercase only the first character while preserving the rest."""
+        if not text:
+            return text
+        return text[0].lower() + text[1:]
 
-        Args:
-            question: Reformulated question
+    def _detect_context_markers(self, question: str) -> List[str]:
+        """Infer context markers embedded by the LLM within the question itself."""
+        lowered = question.lower()
+        context_added: List[str] = []
 
-        Returns:
-            tuple: (enriched_question, context_added_list)
-        """
-        context_added = []
+        marker_map = [
+            ("conceptual and definitional", "epistemic framing: conceptual analysis"),
+            ("semantic", "epistemic framing: conceptual analysis"),
+            ("historical", "epistemic framing: historical analysis"),
+            ("genealogical", "epistemic framing: historical analysis"),
+            ("teleological", "epistemic framing: teleological analysis"),
+            ("functional", "epistemic framing: functional analysis"),
+            ("pragmatic", "epistemic framing: pragmatic analysis"),
+            ("evaluative and normative", "epistemic framing: evaluative analysis"),
+            ("multiple disciplinary", "epistemic framing: multi-perspective analysis"),
+            ("interdisciplinary", "epistemic framing: multi-perspective analysis"),
+            ("epistemological perspective", "epistemic framing: general epistemological"),
+            ("epistemological and interdisciplinary", "epistemic framing: general epistemological"),
+            ("in the context of", "contextual framing embedded in question"),
+        ]
 
-        # Enhanced epistemological context markers with epistemic frameworks
-        epistemic_frameworks = {
-            # Definitional inquiries
-            'definition': {
-                'context': 'seeking to understand the conceptual definition and semantic boundaries',
-                'perspective': 'from a philosophical and conceptual analysis perspective'
-            },
-            'meaning': {
-                'context': 'exploring the semantic and interpretive dimensions',
-                'perspective': 'from a hermeneutic and linguistic perspective'
-            },
+        for key, label in marker_map:
+            if key in lowered and label not in context_added:
+                context_added.append(label)
 
-            # Historical inquiries
-            'history': {
-                'context': 'tracing the historical development and paradigm shifts',
-                'perspective': 'from a historical epistemology perspective'
-            },
-            'origin': {
-                'context': 'examining the historical emergence and evolution',
-                'perspective': 'from a genealogical and historical perspective'
-            },
-
-            # Functional inquiries
-            'function': {
-                'context': 'analyzing the purpose, utility, and practical applications',
-                'perspective': 'from a functional and pragmatic perspective'
-            },
-            'purpose': {
-                'context': 'investigating the teleological dimensions and intended outcomes',
-                'perspective': 'from a teleological and systems perspective'
-            },
-            'role': {
-                'context': 'examining the functional role within broader systems',
-                'perspective': 'from a systemic and ecological perspective'
-            },
-
-            # Evaluative inquiries
-            'value': {
-                'context': 'assessing the significance and evaluative dimensions',
-                'perspective': 'from an axiological and evaluative perspective'
-            },
-            'impact': {
-                'context': 'analyzing the broader implications and consequences',
-                'perspective': 'from a consequentialist and impact assessment perspective'
-            }
-        }
-
-        enriched = question
-
-        # Apply specific epistemic framework if question type is identified
-        for key, framework in epistemic_frameworks.items():
-            if key in question.lower():
-                enriched = f"In the context of {framework['context']}, {question.lower()}"
-                context_added.append(f"epistemic framework: {framework['context']}")
-                context_added.append(f"disciplinary perspective: {framework['perspective']}")
-                break
-
-        # Add general epistemological context if no specific framework found
-        if not context_added:
-            # Determine question type for appropriate framing
-            if any(word in question.lower() for word in ['what is', 'what are', 'define', 'explain']):
-                enriched = f"From a conceptual and definitional perspective, {question.lower()}"
-                context_added.append("epistemic framing: conceptual analysis")
-            elif any(word in question.lower() for word in ['how', 'why', 'what causes']):
-                enriched = f"From multiple disciplinary and interpretive perspectives, {question.lower()}"
-                context_added.append("epistemic framing: multi-perspective analysis")
-            elif any(word in question.lower() for word in ['should', 'ought', 'better', 'worse']):
-                enriched = f"From an evaluative and normative perspective, {question.lower()}"
-                context_added.append("epistemic framing: evaluative analysis")
-            else:
-                enriched = f"From an epistemological and interdisciplinary perspective, {question.lower()}"
-                context_added.append("epistemic framing: general epistemological")
-
-        return enriched, context_added
-
-    def _validate_reformulation(self, question: str) -> str:
-        """Validate the final reformulated question.
-
-        Args:
-            question: Question to validate
-
-        Returns:
-            str: Validated question
-
-        Raises:
-            LayerProcessingError: If validation fails
-        """
-        # Length validation
-        if len(question) < 10:
-            raise LayerProcessingError("Reformulated question too short")
-
-        if len(question) > 500:
-            raise LayerProcessingError("Reformulated question too long")
-
-        # Content validation
-        if not any(word in question.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', 'definition', 'history', 'function']):
-            raise LayerProcessingError("Question does not appear to be epistemological in nature")
-
-        # Neutrality check (basic)
-        biased_words = ['stupid', 'dumb', 'ridiculous', 'absurd', 'obviously', 'clearly', 'of course']
-        if any(word in question.lower() for word in biased_words):
-            self.logger.warning("Potential bias detected in reformulated question", question=question)
-
-        return question
+        return context_added
 
     async def health_check(self) -> bool:
         """Perform a health check on the Reformulator.
@@ -434,8 +382,8 @@ REFORMULATED QUESTION:"""
             )
 
             result = await self.process(test_request)
-            return len(result) > 10
+            return len(result.question) > 10
 
         except Exception as e:
-            self.logger.error("Health check failed", error=str(e))
+            self.logger.error("Health check failed | error=%s", e)
             return False

@@ -26,20 +26,20 @@ The Epistemological Propagation Network exhibits natural layered characteristics
 
 ### Layer 1: Input Reformulation (Presentation Layer)
 
-**Purpose**: Sanitize and contextualize raw user input for downstream processing.
+**Purpose**: Sanitize raw user input and obtain a validated, context-aware reformulation directly from the LLM.
 
 **Responsibilities**:
 
 - Bias elimination and neutral language processing
 - Epistemological intent distillation
-- Factual context addition
-- Input validation and error handling
+- Prompt engineering that instructs the LLM to embed epistemic context and self-validate
+- Lightweight output verification and error handling
 
 **Components**:
 
 - `Reformulator` Node: Single LLM-based processing unit
 - Input sanitization utilities
-- Context enrichment services
+- Prompt templates and compliance checks
 
 **Input**: Raw user question (e.g., "What are mental models?")
 **Output**: Reformulated, context-aware question

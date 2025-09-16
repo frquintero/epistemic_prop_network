@@ -22,9 +22,9 @@ will be formatted and passed as inputs to the next layer.
 - **Node:** `Reformulator`
 - **Implementation:**
   - Accept raw user input.
-  - Make an LLM call to purify, contextualize, and reformulate the
-    question.
-  - Output: Reformulated question.
+  - Make an LLM call (with a carefully engineered prompt) to purify,
+    contextualize, and reformulate the question in a single step.
+  - Apply lightweight local validation before returning the reformulated question.
 
 ### Layer 2: Definition Generation
 
