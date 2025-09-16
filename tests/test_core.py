@@ -1,5 +1,6 @@
 """Basic tests for core components of the Epistemological Propagation Network."""
 
+import os
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -26,8 +27,9 @@ class TestNetworkConfig:
 
     def test_config_creation_without_api_key_raises_error(self):
         """Test that config creation fails without API key."""
-        with pytest.raises(ValueError, match="GROQ_API_KEY must be provided"):
-            NetworkConfig(groq_api_key="")
+        with patch.dict(os.environ, {"GROQ_API_KEY": ""}):
+            with pytest.raises(ValueError, match="GROQ_API_KEY must be provided either as parameter or environment variable"):
+                NetworkConfig(groq_api_key="")
 
     def test_config_validation_bounds(self):
         """Test configuration value bounds validation."""

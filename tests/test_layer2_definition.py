@@ -27,9 +27,9 @@ class TestSemanticNode:
         return client
 
     @pytest.fixture
-    def semantic_node(self, mock_llm_client):
-        """Create a SemanticNode instance with mocked LLM client."""
-        return SemanticNode(mock_llm_client)
+    def semantic_node(self):
+        """Create a SemanticNode instance for testing."""
+        return SemanticNode()
 
     @pytest.fixture
     def test_question(self):
@@ -43,23 +43,25 @@ class TestSemanticNode:
 
     def test_initialization(self, semantic_node):
         """Test that SemanticNode initializes correctly."""
-        assert semantic_node.llm_client is not None
         assert semantic_node.logger is not None
+        # llm_client is created lazily, so it should be None initially
+        assert semantic_node.llm_client is None
+        # But _get_llm_client should create it
+        llm_client = semantic_node._get_llm_client()
+        assert llm_client is not None
+        assert semantic_node.llm_client is not None
 
     @pytest.mark.asyncio
     async def test_process_success(self, semantic_node, test_question, mock_llm_client):
         """Test successful processing of a question."""
+        # Mock the _get_llm_client method to return our mock client
+        semantic_node._get_llm_client = lambda: mock_llm_client
+        
         result = await semantic_node.process(test_question)
 
         assert isinstance(result, str)
         assert len(result) > 0
         mock_llm_client.generate_text.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_health_check_success(self, semantic_node, mock_llm_client):
-        """Test successful health check."""
-        result = await semantic_node.health_check()
-        assert result is True
 
 
 class TestLayer2DefinitionManager:

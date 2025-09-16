@@ -265,50 +265,15 @@ class LLMClient:
             logger.error("Failed to parse structured response", error=str(e))
             raise ValueError(f"Invalid JSON response: {response_text}")
 
-    def health_check(self) -> bool:
-        """Perform a basic health check of the LLM service.
-
-        Returns:
-            True if service is healthy, False otherwise
-        """
-        if self.config.mock_responses:
-            return True
-
-        try:
-            # Simple test request
-            response = self.client.chat.completions.create(
-                model=self.config.model,
-                messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=10,
-                timeout=10
-            )
-            return bool(response.choices[0].message.content)
-        except Exception as e:
-            logger.error("Health check failed", error=str(e))
-            return False
-
-    async def health_check_async(self) -> bool:
-        """Perform an asynchronous health check.
-
-        Returns:
-            True if service is healthy, False otherwise
-        """
-        if self.config.mock_responses:
-            return True
-
-        try:
-            response = await self.async_client.chat.completions.create(
-                model=self.config.model,
-                messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=10,
-                timeout=10
-            )
-            return bool(response.choices[0].message.content)
-        except Exception as e:
-            logger.error("Async health check failed", error=str(e))
-            return False
-
     def _build_mock_text_response(self, prompt: str) -> str:
+        """Generate a deterministic mock response for testing."""
+        lines = [line.strip() for line in prompt.splitlines() if line.strip()]
+        for line in reversed(lines):
+            if line.endswith("?"):
+                return line
+            if line.upper().startswith("REFORMULATED QUESTION"):
+                break
+        return "Mock reformulated question for testing?"
         """Generate a deterministic mock response for testing."""
         lines = [line.strip() for line in prompt.splitlines() if line.strip()]
         for line in reversed(lines):

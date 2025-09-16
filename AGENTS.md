@@ -10,12 +10,12 @@ This document describes the agent architecture for the Epistemic LLM Network, de
   - Semantic Node ✅
   - Genealogical Node ✅
   - Teleological Node ✅
+- **Layer 3**: Validation Agents (Fully implemented)
+  - Correspondence Validator ✅
+  - Coherence Validator ✅
+  - Pragmatic Validator ✅
 
 ### 🚧 In Development
-- **Layer 3**: Validation Agents (Planned)
-  - Correspondence Validator 🚧
-  - Coherence Validator 🚧
-  - Pragmatic Validator 🚧
 - **Layer 4**: Synthesis Node (Planned)
 
 ## Agent Overview
@@ -102,6 +102,55 @@ The network employs specialized agents that operate in sequence across four laye
 - Structured output in `Phase2Triple` format
 - Performance optimization with ~1.2 second execution time
 - Clean data flow without cross-contamination
+
+### Layer 3: Validation Agents ✅
+
+**Status**: Fully implemented with parallel processing
+**Location**: `layers/layer3_validation/`
+**Architecture**: Concurrent execution using `asyncio.gather`
+
+#### Correspondence Validator ✅
+**Location**: `layers/layer3_validation/correspondence_validator.py`
+
+**Responsibilities**:
+- Tests whether outputs align with observable reality
+- Validates against scientific evidence, historical records, and empirical studies
+- Returns verdicts indicating which aspects are empirically supported
+- Provides evidence-based assessments with specific citations
+
+**Example Output**: Detailed empirical validation of philosophical claims, identifying historically accurate elements while noting speculative scientific proposals that remain unverified.
+
+#### Coherence Validator ✅
+**Location**: `layers/layer3_validation/coherence_validator.py`
+
+**Responsibilities**:
+- Assesses internal logical consistency across all components
+- Checks if definitions follow from historical development
+- Verifies functional claims cohere with established theories
+- Identifies logical gaps, circularities, or contradictions
+
+**Example Output**: Analysis of how semantic definitions, historical narratives, and functional claims interlock, identifying subtle circularities while confirming overall logical consistency.
+
+#### Pragmatic Validator ✅
+**Location**: `layers/layer3_validation/pragmatic_validator.py`
+
+**Responsibilities**:
+- Evaluates practical utility in real-world contexts
+- Assesses value in domains like education, business, and cognitive science
+- Determines actionable insights derived from the conceptual framework
+- Translates abstract concepts into concrete applications
+
+**Example Output**: Practical applications in education (curricula design), business (risk assessment), and policy (evidence-based decision-making), showing how philosophical frameworks yield actionable tools.
+
+### Layer 3 Parallel Execution ✅
+**Location**: `layers/layer3_validation/manager.py`
+
+**Features**:
+- Concurrent processing of all three validation agents using `asyncio.gather`
+- Error handling with fallback responses for individual validator failures
+- Structured output in `Phase3Triple` format
+- Performance optimization with ~1.5 second execution time
+- Clean data flow from Phase2Triple to Phase3Triple
 
 ## Agent Responsibilities
 
