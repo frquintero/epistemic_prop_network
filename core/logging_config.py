@@ -36,8 +36,12 @@ def setup_logging(
         level = level or "INFO"
         enable_structured = enable_structured if enable_structured is not None else True
 
-    # Convert string level to logging level
-    numeric_level = getattr(logging, level.upper(), logging.INFO)
+    # If structured logging is disabled, suppress all logging output
+    if not enable_structured:
+        numeric_level = logging.CRITICAL + 1  # Higher than CRITICAL to suppress all output
+    else:
+        # Convert string level to logging level
+        numeric_level = getattr(logging, level.upper(), logging.INFO)
 
     # Setup handlers
     handlers = []

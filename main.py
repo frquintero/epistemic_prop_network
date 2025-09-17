@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Main interface for the Epistemological Propagation Network - shows raw Layer 4 output."""
 
+import argparse
 import asyncio
 import os
 import uuid
@@ -19,15 +20,16 @@ from layers.layer3_validation import Layer3ValidationManager
 from layers.layer4_synthesis import Layer4SynthesisManager
 
 
-# Initialize configuration and logging
-init_config()
+# Initialize configuration and logging will be done in main() after parsing args
+# init_config()  # Removed - will be called with proper logging config
 
 
 class EpistemologicalPropagationNetwork:
     """Main interface for the Epistemological Propagation Network."""
 
-    def __init__(self):
+    def __init__(self, enable_structlog: bool = False):
         """Initialize the EPN with all layer managers and optimized LLM configurations."""
+        self.enable_structlog = enable_structlog
         
         # Create different LLM configs for different layers
         base_config = {
@@ -142,19 +144,24 @@ class EpistemologicalPropagationNetwork:
         )
 
         print(f"🧠 Processing question: {question}")
-        print(f"📊 Auto-detected metadata: {metadata}")
+        if self.enable_structlog:
+            print(f"📊 Auto-detected metadata: {metadata}")
 
         try:
-            print("\n🔄 Layer 1: Reformulation...")
+            if self.enable_structlog:
+                print("\n🔄 Layer 1: Reformulation...")
             reformulated = await self.reformulator.process(request)
 
-            print("🔄 Layer 2: Definition Generation...")
+            if self.enable_structlog:
+                print("🔄 Layer 2: Definition Generation...")
             phase2_result = await self.layer2_manager.process(reformulated)
 
-            print("🔄 Layer 3: Validation...")
+            if self.enable_structlog:
+                print("🔄 Layer 3: Validation...")
             phase3_result = await self.layer3_manager.process(phase2_result)
 
-            print("🔄 Layer 4: Synthesis...")
+            if self.enable_structlog:
+                print("🔄 Layer 4: Synthesis...")
             final_result = await self.layer4_manager.process(phase3_result)
 
             return {
@@ -182,10 +189,41 @@ class EpistemologicalPropagationNetwork:
 
 async def main():
     """Main entry point for the CLI interface."""
-    print("Setting up Epistemological Propagation Network...")
+    parser = argparse.ArgumentParser(
+        description="Epistemological Propagation Network - Process questions through multi-layer analysis",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s "What are mental models?"
+  %(prog)s --structlog "What are mental models?"
+  %(prog)s  # Interactive mode
+        """
+    )
+    parser.add_argument(
+        'question',
+        nargs='*',
+        help='The question to process (if not provided, enters interactive mode)'
+    )
+    parser.add_argument(
+        '--structlog',
+        action='store_true',
+        help='Enable detailed structured logging for debugging'
+    )
 
-    if len(os.sys.argv) > 1:
-        question = " ".join(os.sys.argv[1:])
+    args = parser.parse_args()
+
+    # Set up logging based on the --structlog flag
+    if args.structlog:
+        os.environ['STRUCTURED_LOGGING'] = 'true'
+    else:
+        os.environ['STRUCTURED_LOGGING'] = 'false'
+
+    # Initialize configuration with proper logging setup
+    init_config()
+
+    # Determine the question
+    if args.question:
+        question = " ".join(args.question)
     else:
         print("🤔 Welcome to the Epistemological Propagation Network!")
         print("Please enter your question (or 'quit' to exit):")
@@ -201,6 +239,10 @@ async def main():
             print("\n👋 Goodbye!")
             return
 
+    # Only show setup message if structlog is enabled
+    if args.structlog:
+        print("Setting up Epistemological Propagation Network...")
+
     if len(question) < 5:
         print("❌ ERROR: Question too short! Please provide a more detailed question.")
         return
@@ -211,7 +253,7 @@ async def main():
     print(f"🔍 Processing question: {question}")
     print("-" * 60)
 
-    epn = EpistemologicalPropagationNetwork()
+    epn = EpistemologicalPropagationNetwork(enable_structlog=args.structlog)
     result = await epn.process_question(question)
 
     if result["success"]:
