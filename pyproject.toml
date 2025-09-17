@@ -26,6 +26,9 @@ dev = [
     "mypy>=1.0.0",
 ]
 
+[project.scripts]
+epn = "main:main"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["epistemological_network*"]
