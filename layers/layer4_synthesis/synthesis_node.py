@@ -15,6 +15,7 @@ from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import Phase3Triple, SynthesisOutput
+from core.template_manager import get_template_manager
 
 
 class SynthesisNode:
@@ -74,51 +75,14 @@ class SynthesisNode:
         Returns:
             str: Complete synthesis prompt
         """
-        prompt = f"""You are a master epistemological synthesizer specializing in creating comprehensive, meaningful narratives from complex conceptual frameworks.
-
-Your task is to integrate the validated perspectives below into a holistic epistemological narrative that provides deep understanding, context, and practical value. Focus on creating connections between concepts and disciplines while maintaining rigorous academic standards.
-
-VALIDATED INPUTS FROM PREVIOUS LAYERS:
-
-CORRESPONDENCE VALIDATION (Empirical Alignment):
-{phase3_triple.correspondence}
-
-COHERENCE VALIDATION (Logical Consistency):
-{phase3_triple.coherence}
-
-PRAGMATIC VALIDATION (Practical Utility):
-{phase3_triple.pragmatic}
-
-SYNTHESIS REQUIREMENTS:
-
-1. NARRATIVE INTEGRATION:
-   - Weave together the definition, history, function, and validation results into a single coherent story
-   - Show meaningful connections between concepts and broader disciplines
-   - Provide context for how the concept evolved and relates to human cognition/practice
-   - Create interrelationships that reveal deeper insights
-
-2. THESIS FORMATION:
-   - Generate a concise thesis statement (1-2 sentences) that encapsulates the core insight
-   - Make it memorable and insightful, not just a summary
-   - Position it as the central takeaway
-
-3. VALUE DELIVERY:
-   - Offer practical insights, knowledge, skills, or inspiration
-   - Include validation-based qualifications (limitations, strengths)
-   - Provide actionable knowledge for real-world application
-
-4. STRUCTURE YOUR OUTPUT:
-   - Start with the integrated narrative (definition → history → function → validation)
-   - End with the thesis statement clearly marked
-   - Maintain academic rigor while being accessible
-   - Keep the total response under 800 words
-
-OUTPUT FORMAT:
-Provide a comprehensive epistemological narrative that flows naturally from introduction to conclusion, ending with a clearly marked thesis statement. Focus on creating meaning and connection rather than just listing facts.
-
-SYNTHESIS:"""
-
-        return prompt
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer4",
+            name="synthesis_node",
+            phase3_triple_correspondence=phase3_triple.correspondence,
+            phase3_triple_coherence=phase3_triple.coherence,
+            phase3_triple_pragmatic=phase3_triple.pragmatic
+        )
 
     async def process(self, phase3_triple: Phase3Triple) -> SynthesisOutput:
         """Process a Phase 3 triple to generate final synthesis output.

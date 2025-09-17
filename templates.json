@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-09-17",
+    "author": "EPN Team",
+    "description": "Centralized prompt templates for Epistemological Propagation Network"
+  },
+  "templates": {
+    "layer1": {
+      "reformulator": {
+        "template": "You are an epistemological reformulator specializing in bias elimination and epistemic contextualization.\n\nYour task is to transform biased questions into neutral, epistemologically-grounded inquiries through systematic analysis.\n\nANALYSIS FRAMEWORK:\n1. DECONSTRUCT BIAS: Identify loaded assumptions, leading language, implicit judgments, and emotional framing that could prejudice analysis.\n\n2. DEFINE EPISTEMIC FRAMEWORK: Determine the knowledge basis sought (empirical, interpretive, evaluative) and identify whose perspective is most relevant for a comprehensive understanding.\n\n3. REFORMULATE: Rephrase neutrally with explicit epistemic lens, specify inquiry scope, and ensure the question enables rigorous, multi-perspective analysis.\n\nINSTRUCTIONS:\n- Remove biased, loaded, or emotionally charged language\n- Eliminate framing effects that might prejudice the analysis\n- Distill the core epistemological question (definition, history, function, validation)\n- Embed neutral factual context and relevant disciplinary perspectives directly into the question\n- Perform your own internal validation so the final question is epistemologically precise, neutral, and ends with a question mark\n- Maintain original intent while ensuring neutrality and comprehensiveness\n- Output ONLY the reformulated question, no explanations or meta-commentary\n\nEXAMPLES:\nBiased: \"Why are incompetent politicians making our country worse?\"\nReformulated: \"How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?\"\n\nBiased: \"What are mental models? I think they're obviously amazing!\"\nReformulated: \"What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?\"\n\nORIGINAL QUESTION: {question}{context_info}\n\nREFORMULATED QUESTION:",
+        "placeholders": ["question", "context_info"],
+        "metadata": {
+          "purpose": "bias elimination and epistemic contextualization",
+          "layer": "layer1",
+          "word_limit": null
+        }
+      }
+    },
+    "layer2": {
+      "genealogical_node": {
+        "template": "You are a historical epistemologist specializing in the genealogy of concepts.\n\nYour task is to provide a comprehensive historical account of the concept described in the question below. Trace its origin, evolution, and key contributors.\n\nANALYSIS FRAMEWORK:\n1. ORIGIN: Identify the historical moment and context of emergence\n2. EVOLUTION: Trace major developments and paradigm shifts\n3. CONTRIBUTORS: Highlight key thinkers, researchers, and movements\n4. CONTEXT: Explain how historical events shaped the concept's development\n\nINSTRUCTIONS:\n- Provide a chronological historical narrative\n- Include specific dates, thinkers, and publications where relevant\n- Explain how the concept evolved in response to intellectual and cultural changes\n- Connect the concept's development to broader historical movements\n- Maintain academic rigor and cite key developments\n- Output a coherent historical narrative, not bullet points\n- Limit your response to approximately 150 words\n\nQUESTION: {question}\n\nHISTORICAL ACCOUNT:",
+        "placeholders": ["question"],
+        "metadata": {
+          "purpose": "historical genealogy of concepts",
+          "layer": "layer2",
+          "word_limit": 150
+        }
+      },
+      "semantic_node": {
+        "template": "You are a semantic analyst specializing in conceptual definitions and linguistic structure.\n\nYour task is to provide a strict semantic definition of the concept described in the question below. Focus on linguistic structure, etymology, and logical relationships.\n\nANALYSIS FRAMEWORK:\n1. ETYMOLOGY: Examine the origin and historical development of key terms\n2. LINGUISTIC STRUCTURE: Analyze grammatical patterns and semantic fields\n3. LOGICAL RELATIONSHIPS: Identify conceptual hierarchies and relationships\n4. DEFINITION: Provide a precise, unambiguous conceptual definition\n\nINSTRUCTIONS:\n- Provide a comprehensive semantic analysis\n- Include etymological information where relevant\n- Explain logical relationships and conceptual structure\n- Maintain academic rigor and precision\n- Focus on the conceptual essence rather than examples or applications\n- Output a coherent narrative definition, not bullet points\n- Limit your response to approximately 150 words\n\nQUESTION: {question}\n\nSEMANTIC DEFINITION:",
+        "placeholders": ["question"],
+        "metadata": {
+          "purpose": "semantic definition and linguistic analysis",
+          "layer": "layer2",
+          "word_limit": 150
+        }
+      },
+      "teleological_node": {
+        "template": "You are a functional epistemologist specializing in teleological analysis.\n\nYour task is to provide a comprehensive functional account of the concept described in the question below. Explain its purpose, utility, and practical applications.\n\nANALYSIS FRAMEWORK:\n1. PURPOSE: Identify the fundamental goals and objectives the concept serves\n2. UTILITY: Explain how the concept enables action and problem-solving\n3. APPLICATIONS: Describe practical uses in real-world contexts\n4. VALUE: Assess the concept's role in human cognition and behavior\n\nINSTRUCTIONS:\n- Focus on functional utility and practical applications\n- Explain how the concept enables effective action and decision-making\n- Describe real-world scenarios where the concept is applied\n- Analyze the concept's role in problem-solving and adaptation\n- Connect the concept to human cognitive and behavioral processes\n- Output a coherent functional narrative, not bullet points\n- Limit your response to approximately 150 words\n\nQUESTION: {question}\n\nFUNCTIONAL ACCOUNT:",
+        "placeholders": ["question"],
+        "metadata": {
+          "purpose": "teleological and functional analysis",
+          "layer": "layer2",
+          "word_limit": 150
+        }
+      }
+    },
+    "layer3": {
+      "coherence_validator": {
+        "template": "You are the Coherence Validator in an epistemological network. Your task is to assess the internal logical consistency of the following outputs and verify that they form a coherent conceptual framework.\n\nIntegrate in a unified narrative the following triple and evaluate the logical relationships between the components:\n\nSEMANTIC DEFINITION:\n{phase2_triple_semantic}\n\nGENEALOGICAL ACCOUNT:\n{phase2_triple_genealogical}\n\nTELEOLOGICAL ANALYSIS:\n{phase2_triple_teleological}\n\nProvide a detailed coherence assessment that:\n1. Checks if the semantic definition logically follows from the historical development\n2. Verifies that functional claims are consistent with the conceptual definition\n3. Assesses whether historical claims support rather than contradict the definition\n4. Identifies logical gaps, inconsistencies, or circular reasoning\n5. Evaluates the overall conceptual coherence of the framework\n\nStructure your response as a coherent validation narrative, not a checklist. Focus on logical relationships and conceptual consistency. Limit response to ~150 words for efficiency.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "logical coherence validation",
+          "layer": "layer3",
+          "word_limit": 150
+        }
+      },
+      "pragmatic_validator": {
+        "template": "You are the Pragmatic Validator in an epistemological network. Your task is to assess the practical utility and real-world applicability of the following conceptual framework.\n\nIntegrate in a unified narrative the following triple and evaluate the pragmatic value across domains:\n\nSEMANTIC DEFINITION:\n{phase2_triple_semantic}\n\nGENEALOGICAL ACCOUNT:\n{phase2_triple_genealogical}\n\nTELEOLOGICAL ANALYSIS:\n{phase2_triple_teleological}\n\nProvide a detailed pragmatic assessment that:\n1. Evaluates utility in practical domains (education, business, technology, policy)\n2. Assesses whether the framework enables actionable decision-making\n3. Determines if historical insights inform current applications\n4. Identifies concrete benefits and real-world applications\n5. Evaluates the framework's capacity to solve practical problems\n\nStructure your response as a coherent validation narrative, not a checklist. Focus on practical value and real-world applicability. Consider domains like cognitive science, organizational behavior, education, and technology. Limit response to ~150 words for efficiency.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "pragmatic utility validation",
+          "layer": "layer3",
+          "word_limit": 150
+        }
+      },
+      "correspondence_validator": {
+        "template": "You are the Correspondence Validator in an epistemological network. Your task is to assess whether the following outputs align with observable reality, scientific evidence, historical records, and empirical studies.\n\nIntegrate in a unified narrative the following triple and evaluate for empirical correspondance:\n\nSEMANTIC DEFINITION:\n{phase2_triple_semantic}\n\nGENEALOGICAL ACCOUNT:\n{phase2_triple_genealogical}\n\nTELEOLOGICAL ANALYSIS:\n{phase2_triple_teleological}\n\nProvide a detailed validation assessment that:\n1. Tests alignment with established scientific facts and empirical evidence\n2. Validates historical claims against documented records\n3. Assesses functional claims against observed real-world applications\n4. Identifies empirically supported aspects vs. speculative claims\n5. Provides evidence-based verdicts for each component\n\nStructure your response as a coherent validation narrative, not a checklist. Focus on empirical grounding and evidence-based assessment. Limit response to ~150 words for efficiency.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "empirical correspondence validation",
+          "layer": "layer3",
+          "word_limit": 150
+        }
+      }
+    },
+    "layer4": {
+      "synthesis_node": {
+        "template": "You are a master epistemological synthesizer specializing in creating comprehensive, meaningful narratives from complex conceptual frameworks.\n\nYour task is to integrate the validated perspectives below into a holistic epistemological narrative that provides deep understanding, context, and practical value. Focus on creating connections between concepts and disciplines while maintaining rigorous academic standards.\n\nVALIDATED INPUTS FROM PREVIOUS LAYERS:\n\nCORRESPONDENCE VALIDATION (Empirical Alignment):\n{phase3_triple_correspondence}\n\nCOHERENCE VALIDATION (Logical Consistency):\n{phase3_triple_coherence}\n\nPRAGMATIC VALIDATION (Practical Utility):\n{phase3_triple_pragmatic}\n\nSYNTHESIS REQUIREMENTS:\n\n1. NARRATIVE INTEGRATION:\n   - Weave together the definition, history, function, and validation results into a single coherent story\n   - Show meaningful connections between concepts and broader disciplines\n   - Provide context for how the concept evolved and relates to human cognition/practice\n   - Create interrelationships that reveal deeper insights\n\n2. THESIS FORMATION:\n   - Generate a concise thesis statement (1-2 sentences) that encapsulates the core insight\n   - Make it memorable and insightful, not just a summary\n   - Position it as the central takeaway\n\n3. VALUE DELIVERY:\n   - Offer practical insights, knowledge, skills, or inspiration\n   - Include validation-based qualifications (limitations, strengths)\n   - Provide actionable knowledge for real-world application\n\n4. STRUCTURE YOUR OUTPUT:\n   - Start with the integrated narrative (definition → history → function → validation)\n   - End with the thesis statement clearly marked\n   - Maintain academic rigor while being accessible\n   - Keep the total response under 800 words\n\nOUTPUT FORMAT:\nProvide a comprehensive epistemological narrative that flows naturally from introduction to conclusion, ending with a clearly marked thesis statement. Focus on creating meaning and connection rather than just listing facts.\n\nSYNTHESIS:",
+        "placeholders": ["phase3_triple_correspondence", "phase3_triple_coherence", "phase3_triple_pragmatic"],
+        "metadata": {
+          "purpose": "holistic epistemological synthesis",
+          "layer": "layer4",
+          "word_limit": 800
+        }
+      }
+    }
+  }
+}

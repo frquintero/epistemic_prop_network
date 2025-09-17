@@ -8,6 +8,7 @@ from core.llm_client import LLMClient
 from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
 from core.logging_config import get_logger
+from core.template_manager import get_template_manager
 
 logger = None
 
@@ -62,27 +63,14 @@ class CorrespondenceValidator:
         Returns:
             Formatted prompt for LLM
         """
-        return f"""You are the Correspondence Validator in an epistemological network. Your task is to assess whether the following outputs align with observable reality, scientific evidence, historical records, and empirical studies.
-
-Integrate in a unified narrative the following triple and evaluate for empirical correspondance:
-
-SEMANTIC DEFINITION:
-{phase2_triple.semantic}
-
-GENEALOGICAL ACCOUNT:
-{phase2_triple.genealogical}
-
-TELEOLOGICAL ANALYSIS:
-{phase2_triple.teleological}
-
-Provide a detailed validation assessment that:
-1. Tests alignment with established scientific facts and empirical evidence
-2. Validates historical claims against documented records
-3. Assesses functional claims against observed real-world applications
-4. Identifies empirically supported aspects vs. speculative claims
-5. Provides evidence-based verdicts for each component
-
-Structure your response as a coherent validation narrative, not a checklist. Focus on empirical grounding and evidence-based assessment. Limit response to ~150 words for efficiency."""
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer3",
+            name="correspondence_validator",
+            phase2_triple_semantic=phase2_triple.semantic,
+            phase2_triple_genealogical=phase2_triple.genealogical,
+            phase2_triple_teleological=phase2_triple.teleological
+        )
 
     def _get_fallback_response(self) -> str:
         """Provide fallback response when validation fails.

@@ -15,6 +15,7 @@ from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import NetworkRequest, ReformulatedQuestion
+from core.template_manager import get_template_manager
 
 
 class Reformulator:
@@ -88,17 +89,21 @@ class Reformulator:
                 request.original_question
             )
 
-            # Step 1: Initial bias detection and sanitization
-            sanitized_question, initial_bias_removed = self._sanitize_input(request.original_question)
+            # Basic input validation
+            if not request.original_question or not request.original_question.strip():
+                raise LayerProcessingError("Question cannot be empty", {"request_id": request.request_id})
 
-            # Step 2: LLM-based reformulation
+            if len(request.original_question.strip()) < 3:
+                raise LayerProcessingError("Question too short", {"request_id": request.request_id})
+
+            # Step 1: LLM-based reformulation (handles all bias elimination internally)
             reformulated_question, raw_llm_response, reformulation_bias_removed = await self._reformulate_with_llm(
-                sanitized_question,
+                request.original_question,
                 request.metadata
             )
 
-            # Combine bias removal tracking
-            bias_removed = initial_bias_removed + reformulation_bias_removed
+            # Bias removal tracking comes entirely from LLM processing
+            bias_removed = reformulation_bias_removed
 
             # LLM handles all validation internally - trust the reformulated output
             context_added = self._detect_context_markers(reformulated_question)
@@ -131,41 +136,6 @@ class Reformulator:
                 f"Failed to reformulate question: {str(e)}",
                 {"request_id": request.request_id, "original_question": request.original_question}
             ) from e
-
-    def _sanitize_input(self, question: str) -> tuple[str, List[str]]:
-        """Perform initial sanitization to remove obvious bias indicators.
-
-        Args:
-            question: Raw user question
-
-        Returns:
-            tuple: (sanitized_question, bias_removed_list)
-        """
-        bias_removed = []
-
-        # Remove excessive punctuation that might indicate emotional bias
-        original = question
-        sanitized = re.sub(r'[!?]{2,}', '!', question)
-        if sanitized != original:
-            bias_removed.append("excessive punctuation")
-
-        # Reset original for next check
-        original = sanitized
-
-        # Remove leading/trailing whitespace (this is sanitization, not bias removal)
-        sanitized = sanitized.strip()
-        # Don't add to bias_removed for normal whitespace trimming
-
-        # Basic length validation
-        if len(sanitized) < 3:
-            raise LayerProcessingError("Question too short after sanitization")
-
-        if len(sanitized) > 1000:
-            # Truncate overly long questions
-            sanitized = sanitized[:997] + "..."
-            bias_removed.append("truncated long question")
-
-        return sanitized, bias_removed
 
     async def _reformulate_with_llm(self, question: str, metadata: Dict[str, Any]) -> tuple[str, str, List[str]]:
         """Use LLM to perform sophisticated bias elimination and reformulation.
@@ -217,38 +187,13 @@ class Reformulator:
         if metadata:
             context_info = f"\nAdditional context: {metadata}"
 
-        prompt = f"""You are an epistemological reformulator specializing in bias elimination and epistemic contextualization.
-
-Your task is to transform biased questions into neutral, epistemologically-grounded inquiries through systematic analysis.
-
-ANALYSIS FRAMEWORK:
-1. DECONSTRUCT BIAS: Identify loaded assumptions, leading language, implicit judgments, and emotional framing that could prejudice analysis.
-
-2. DEFINE EPISTEMIC FRAMEWORK: Determine the knowledge basis sought (empirical, interpretive, evaluative) and identify whose perspective is most relevant for a comprehensive understanding.
-
-3. REFORMULATE: Rephrase neutrally with explicit epistemic lens, specify inquiry scope, and ensure the question enables rigorous, multi-perspective analysis.
-
-INSTRUCTIONS:
-- Remove biased, loaded, or emotionally charged language
-- Eliminate framing effects that might prejudice the analysis
-- Distill the core epistemological question (definition, history, function, validation)
-- Embed neutral factual context and relevant disciplinary perspectives directly into the question
-- Perform your own internal validation so the final question is epistemologically precise, neutral, and ends with a question mark
-- Maintain original intent while ensuring neutrality and comprehensiveness
-- Output ONLY the reformulated question, no explanations or meta-commentary
-
-EXAMPLES:
-Biased: "Why are incompetent politicians making our country worse?"
-Reformulated: "How do differing interpretations of governmental effectiveness shape public discourse on national progress, from a political sociology perspective?"
-
-Biased: "What are mental models? I think they're obviously amazing!"
-Reformulated: "What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?"
-
-ORIGINAL QUESTION: {question}{context_info}
-
-REFORMULATED QUESTION:"""
-
-        return prompt
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer1",
+            name="reformulator",
+            question=question,
+            context_info=context_info
+        )
 
     def _extract_reformulated_question(self, llm_response: str) -> str:
         """Extract the reformulated question from LLM response.

@@ -14,6 +14,7 @@ from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion
+from core.template_manager import get_template_manager
 
 
 class GenealogicalNode:
@@ -72,30 +73,12 @@ class GenealogicalNode:
         Returns:
             str: Complete genealogical analysis prompt
         """
-        prompt = f"""You are a historical epistemologist specializing in the genealogy of concepts.
-
-Your task is to provide a comprehensive historical account of the concept described in the question below. Trace its origin, evolution, and key contributors.
-
-ANALYSIS FRAMEWORK:
-1. ORIGIN: Identify the historical moment and context of emergence
-2. EVOLUTION: Trace major developments and paradigm shifts
-3. CONTRIBUTORS: Highlight key thinkers, researchers, and movements
-4. CONTEXT: Explain how historical events shaped the concept's development
-
-INSTRUCTIONS:
-- Provide a chronological historical narrative
-- Include specific dates, thinkers, and publications where relevant
-- Explain how the concept evolved in response to intellectual and cultural changes
-- Connect the concept's development to broader historical movements
-- Maintain academic rigor and cite key developments
-- Output a coherent historical narrative, not bullet points
-- Limit your response to approximately 150 words
-
-QUESTION: {question}
-
-HISTORICAL ACCOUNT:"""
-
-        return prompt
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer2",
+            name="genealogical_node",
+            question=question
+        )
 
     async def process(self, reformulated_question: ReformulatedQuestion) -> str:
         """Process a reformulated question to generate historical account.

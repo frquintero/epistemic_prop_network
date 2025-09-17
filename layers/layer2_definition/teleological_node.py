@@ -14,6 +14,7 @@ from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion
+from core.template_manager import get_template_manager
 
 
 class TeleologicalNode:
@@ -72,30 +73,12 @@ class TeleologicalNode:
         Returns:
             str: Complete teleological analysis prompt
         """
-        prompt = f"""You are a functional epistemologist specializing in teleological analysis.
-
-Your task is to provide a comprehensive functional account of the concept described in the question below. Explain its purpose, utility, and practical applications.
-
-ANALYSIS FRAMEWORK:
-1. PURPOSE: Identify the fundamental goals and objectives the concept serves
-2. UTILITY: Explain how the concept enables action and problem-solving
-3. APPLICATIONS: Describe practical uses in real-world contexts
-4. VALUE: Assess the concept's role in human cognition and behavior
-
-INSTRUCTIONS:
-- Focus on functional utility and practical applications
-- Explain how the concept enables effective action and decision-making
-- Describe real-world scenarios where the concept is applied
-- Analyze the concept's role in problem-solving and adaptation
-- Connect the concept to human cognitive and behavioral processes
-- Output a coherent functional narrative, not bullet points
-- Limit your response to approximately 150 words
-
-QUESTION: {question}
-
-FUNCTIONAL ACCOUNT:"""
-
-        return prompt
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer2",
+            name="teleological_node",
+            question=question
+        )
 
     async def process(self, reformulated_question: ReformulatedQuestion) -> str:
         """Process a reformulated question to generate functional account.

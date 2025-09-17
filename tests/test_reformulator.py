@@ -32,35 +32,6 @@ class TestReformulator:
         assert hasattr(reformulator, 'llm_client')
         assert hasattr(reformulator, 'logger')
 
-    def test_sanitize_input_basic(self, reformulator):
-        """Test basic input sanitization."""
-        # Test normal input
-        result, bias_removed = reformulator._sanitize_input("What are mental models?")
-        assert result == "What are mental models?"
-        assert bias_removed == []
-
-        # Test excessive punctuation
-        result, bias_removed = reformulator._sanitize_input("What are mental models!!!???")
-        assert result == "What are mental models!"
-        assert "excessive punctuation" in bias_removed
-
-        # Test whitespace trimming
-        result, bias_removed = reformulator._sanitize_input("  What are mental models?  ")
-        assert result == "What are mental models?"
-        assert bias_removed == []
-
-    def test_sanitize_input_edge_cases(self, reformulator):
-        """Test edge cases in input sanitization."""
-        # Test too short input
-        with pytest.raises(Exception):  # LayerProcessingError
-            reformulator._sanitize_input("Hi")
-
-        # Test long input truncation
-        long_input = "What " * 200 + "are mental models?"
-        result, bias_removed = reformulator._sanitize_input(long_input)
-        assert len(result) <= 1000
-        assert result.endswith("...")
-
     def test_basic_reformulation(self, reformulator):
         """Test basic reformulation fallback."""
         input_question = "What are mental models? I think they're obviously amazing!"

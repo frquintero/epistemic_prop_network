@@ -8,6 +8,7 @@ from core.llm_client import LLMClient
 from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
 from core.logging_config import get_logger
+from core.template_manager import get_template_manager
 
 logger = None
 
@@ -62,27 +63,14 @@ class CoherenceValidator:
         Returns:
             Formatted prompt for LLM
         """
-        return f"""You are the Coherence Validator in an epistemological network. Your task is to assess the internal logical consistency of the following outputs and verify that they form a coherent conceptual framework.
-
-Integrate in a unified narrative the following triple and evaluate the logical relationships between the components:
-
-SEMANTIC DEFINITION:
-{phase2_triple.semantic}
-
-GENEALOGICAL ACCOUNT:
-{phase2_triple.genealogical}
-
-TELEOLOGICAL ANALYSIS:
-{phase2_triple.teleological}
-
-Provide a detailed coherence assessment that:
-1. Checks if the semantic definition logically follows from the historical development
-2. Verifies that functional claims are consistent with the conceptual definition
-3. Assesses whether historical claims support rather than contradict the definition
-4. Identifies logical gaps, inconsistencies, or circular reasoning
-5. Evaluates the overall conceptual coherence of the framework
-
-Structure your response as a coherent validation narrative, not a checklist. Focus on logical relationships and conceptual consistency. Limit response to ~150 words for efficiency."""
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer3",
+            name="coherence_validator",
+            phase2_triple_semantic=phase2_triple.semantic,
+            phase2_triple_genealogical=phase2_triple.genealogical,
+            phase2_triple_teleological=phase2_triple.teleological
+        )
 
     def _get_fallback_response(self) -> str:
         """Provide fallback response when validation fails.

@@ -15,6 +15,7 @@ from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.llm_client import LLMClient
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion
+from core.template_manager import get_template_manager
 
 
 class SemanticNode:
@@ -73,30 +74,12 @@ class SemanticNode:
         Returns:
             str: Complete semantic analysis prompt
         """
-        prompt = f"""You are a semantic analyst specializing in conceptual definitions and linguistic structure.
-
-Your task is to provide a strict semantic definition of the concept described in the question below. Focus on linguistic structure, etymology, and logical relationships.
-
-ANALYSIS FRAMEWORK:
-1. ETYMOLOGY: Examine the origin and historical development of key terms
-2. LINGUISTIC STRUCTURE: Analyze grammatical patterns and semantic fields
-3. LOGICAL RELATIONSHIPS: Identify conceptual hierarchies and relationships
-4. DEFINITION: Provide a precise, unambiguous conceptual definition
-
-INSTRUCTIONS:
-- Provide a comprehensive semantic analysis
-- Include etymological information where relevant
-- Explain logical relationships and conceptual structure
-- Maintain academic rigor and precision
-- Focus on the conceptual essence rather than examples or applications
-- Output a coherent narrative definition, not bullet points
-- Limit your response to approximately 150 words
-
-QUESTION: {question}
-
-SEMANTIC DEFINITION:"""
-
-        return prompt
+        template_manager = get_template_manager()
+        return template_manager.render_template(
+            layer="layer2",
+            name="semantic_node",
+            question=question
+        )
 
     async def process(self, reformulated_question: ReformulatedQuestion) -> str:
         """Process a reformulated question to generate semantic definition.
