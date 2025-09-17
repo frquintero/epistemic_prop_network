@@ -10,9 +10,10 @@ from groq import AsyncGroq, Groq
 from pydantic import BaseModel
 
 from core.config import NetworkConfig, get_config
+from core.logging_config import get_logger
 
 
-logger = structlog.get_logger(__name__)
+logger = get_logger(__name__)
 
 
 class LLMConfig(BaseModel):
@@ -143,17 +144,17 @@ class LLMClient:
             params["response_format"] = response_format
 
         if self.config.mock_responses:
-            logger.debug("Returning mock LLM response", params=params)
+            logger.debug("Returning mock LLM response             params=%s", str(params))
             return self._build_mock_text_response(prompt)
 
         for attempt in range(self.config.max_retries):
             try:
-                logger.info("Making LLM request", attempt=attempt + 1)
+                logger.info("Making LLM request             attempt=%d", attempt + 1)
                 response = await self.async_client.chat.completions.create(**params)
                 return response.choices[0].message.content or ""
 
             except Exception as e:
-                logger.warning("LLM request failed", attempt=attempt + 1, error=str(e))
+                logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
                 if attempt < self.config.max_retries - 1:
                     await asyncio.sleep(self.config.retry_delay * (2 ** attempt))
                 else:
@@ -203,17 +204,17 @@ class LLMClient:
             params["response_format"] = response_format
 
         if self.config.mock_responses:
-            logger.debug("Returning mock synchronous LLM response", params=params)
+            logger.debug("Returning mock synchronous LLM response             params=%s", str(params))
             return self._build_mock_text_response(prompt)
 
         for attempt in range(self.config.max_retries):
             try:
-                logger.info("Making synchronous LLM request", attempt=attempt + 1)
+                logger.info("Making synchronous LLM request             attempt=%d", attempt + 1)
                 response = self.client.chat.completions.create(**params)
                 return response.choices[0].message.content or ""
 
             except Exception as e:
-                logger.warning("LLM request failed", attempt=attempt + 1, error=str(e))
+                logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
                 if attempt < self.config.max_retries - 1:
                     import time
                     time.sleep(self.config.retry_delay * (2 ** attempt))
@@ -249,7 +250,7 @@ class LLMClient:
         }
 
         if self.config.mock_responses:
-            logger.debug("Returning mock structured LLM response", schema=schema)
+            logger.debug("Returning mock structured LLM response             schema=%s", str(schema))
             return self._build_mock_structured_response(schema)
 
         response_text = await self.generate_text(
@@ -262,7 +263,7 @@ class LLMClient:
         try:
             return json.loads(response_text)
         except json.JSONDecodeError as e:
-            logger.error("Failed to parse structured response", error=str(e))
+            logger.error("Failed to parse structured response             error=%s", str(e))
             raise ValueError(f"Invalid JSON response: {response_text}")
 
     def _build_mock_text_response(self, prompt: str) -> str:
