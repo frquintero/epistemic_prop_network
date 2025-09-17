@@ -7,8 +7,9 @@ from typing import Dict, Any, Optional
 from core.llm_client import LLMClient
 from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
+from core.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 class PragmaticValidator:
@@ -32,6 +33,9 @@ class PragmaticValidator:
         Returns:
             Validation narrative assessing practical utility
         """
+        global logger
+        if logger is None:
+            logger = get_logger(__name__)
         logger.info("Starting pragmatic validation")
 
         prompt = self._build_pragmatic_prompt(phase2_triple)

@@ -93,9 +93,16 @@ def _setup_structlog(handlers: list, level: int) -> None:
 
 def _setup_standard_logging(handlers: list, level: int) -> None:
     """Setup standard Python logging."""
-    # Create formatter
-    formatter = logging.Formatter(
-        fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    # Create custom formatter to match the desired style
+    class CustomFormatter(logging.Formatter):
+        def format(self, record):
+            # Convert level name to lowercase and format like the template
+            level = record.levelname.lower()
+            record.levelname = f"{level:>8}"
+            return super().format(record)
+
+    formatter = CustomFormatter(
+        fmt='%(asctime)s [%(levelname)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 

@@ -131,7 +131,7 @@ class NetworkConfig(BaseModel):
             reasoning_effort=os.getenv("REASONING_EFFORT", "medium"),
             tools=json.loads(os.getenv("TOOLS", "[]")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
-            enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "true").lower() == "true",
+            enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "false").lower() == "true",
             debug_mode=os.getenv("DEBUG_MODE", "false").lower() == "true",
             mock_responses=os.getenv("MOCK_RESPONSES", "false").lower() == "true",
         )
@@ -210,11 +210,17 @@ def init_config(config: Optional[NetworkConfig] = None) -> NetworkConfig:
     Returns:
         NetworkConfig: The initialized configuration
     """
+    from .logging_config import setup_logging
+
     global _config
     if config is None:
         _config = NetworkConfig.from_env()
     else:
         _config = config
+
+    # Setup logging after configuration is initialized
+    setup_logging()
+
     return _config
 
 

@@ -1,15 +1,15 @@
 """Layer 3 Validation Manager - Orchestrates parallel validation processing."""
 
 import asyncio
-import logging
 from typing import Dict, Any, Optional, Tuple
 
+from core.logging_config import get_logger
 from core.schemas import Phase2Triple, Phase3Triple
 from .correspondence_validator import CorrespondenceValidator
 from .coherence_validator import CoherenceValidator
 from .pragmatic_validator import PragmaticValidator
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Layer3ValidationManager:

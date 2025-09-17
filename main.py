@@ -11,12 +11,16 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from core.schemas import NetworkRequest
-from core.config import NetworkConfig
+from core.config import NetworkConfig, init_config
 from core.llm_client import LLMClient, LLMConfig
 from layers.layer1_reformulation import Reformulator
 from layers.layer2_definition import Layer2DefinitionManager
 from layers.layer3_validation import Layer3ValidationManager
 from layers.layer4_synthesis import Layer4SynthesisManager
+
+
+# Initialize configuration and logging
+init_config()
 
 
 class EpistemologicalPropagationNetwork:

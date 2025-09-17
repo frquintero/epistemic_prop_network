@@ -7,8 +7,9 @@ from typing import Dict, Any, Optional
 from core.llm_client import LLMClient
 from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
+from core.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 class CoherenceValidator:
@@ -32,6 +33,9 @@ class CoherenceValidator:
         Returns:
             Validation narrative assessing logical consistency
         """
+        global logger
+        if logger is None:
+            logger = get_logger(__name__)
         logger.info("Starting coherence validation")
 
         prompt = self._build_coherence_prompt(phase2_triple)
