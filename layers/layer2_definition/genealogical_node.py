@@ -11,7 +11,7 @@ from datetime import datetime
 
 from core.config import get_config, init_config, NetworkConfig
 from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
-from core.llm_client import LLMClient
+from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion
 from core.template_manager import get_template_manager
@@ -20,19 +20,21 @@ from core.template_manager import get_template_manager
 class GenealogicalNode:
     """Genealogical Node agent for Layer 2 Definition Generation.
 
-    The Genealogical Node traces the historical origin and evolution of concepts,
-    identifying key contributors and paradigm shifts.
+    The Genealogical Node traces the historical development and evolution
+    of concepts through intellectual history.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None):
+    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_config: Optional[LLMConfig] = None):
         """Initialize the Genealogical Node agent.
 
         Args:
             network_config: Optional network configuration. If None, uses default config.
+            llm_config: Optional LLM configuration. If provided, used to create LLM client.
         """
         self.logger = get_logger(__name__)
         self.llm_client: Optional[LLMClient] = None
         self.network_config = network_config
+        self.llm_config = llm_config
         self._config: Optional[NetworkConfig] = None
 
     @property
@@ -61,7 +63,10 @@ class GenealogicalNode:
     def _get_llm_client(self) -> LLMClient:
         """Get or create LLM client instance."""
         if self.llm_client is None:
-            self.llm_client = LLMClient(network_config=self.config)
+            if self.llm_config is not None:
+                self.llm_client = LLMClient(config=self.llm_config)
+            else:
+                self.llm_client = LLMClient(network_config=self.config)
         return self.llm_client
 
     def _build_genealogical_prompt(self, question: str) -> str:

@@ -14,6 +14,7 @@ from string import Formatter
 
 from core.logging_config import get_logger
 from core.exceptions import ConfigurationError
+from core.llm_client import LLMConfig
 
 
 @dataclass
@@ -40,16 +41,20 @@ class TemplateManager:
     Includes fallback mechanisms to prevent system failure.
     """
 
-    def __init__(self, template_file: Optional[str] = None):
+    def __init__(self, template_file: Optional[str] = None, llm_config_file: Optional[str] = None):
         """Initialize the TemplateManager.
 
         Args:
             template_file: Path to the JSON template file. If None, uses default.
+            llm_config_file: Path to the JSON LLM config file. If None, uses default.
         """
         self.logger = get_logger(__name__)
         self.template_file = template_file or self._get_default_template_path()
+        self.llm_config_file = llm_config_file or self._get_default_llm_config_path()
         self.templates: Dict[str, Dict[str, Template]] = {}
+        self.llm_configs: Dict[str, Dict[str, Any]] = {}
         self.metadata: Optional[TemplateMetadata] = None
+        self.llm_metadata: Optional[Dict[str, Any]] = None
         self._loaded = False
 
     def _get_default_template_path(self) -> str:
@@ -58,9 +63,16 @@ class TemplateManager:
         project_root = Path(__file__).parent.parent
         return str(project_root / "templates.json")
 
+    def _get_default_llm_config_path(self) -> str:
+        """Get the default path to the LLM config file."""
+        # Assume llm.json is in the project root
+        project_root = Path(__file__).parent.parent
+        return str(project_root / "llm.json")
+
     def load_templates(self) -> None:
-        """Load templates from JSON file with validation."""
+        """Load templates and LLM configurations from JSON files with validation."""
         try:
+            # Load templates
             if not os.path.exists(self.template_file):
                 self.logger.warning(
                     "Template file not found at %s, using fallback mode",
@@ -70,14 +82,14 @@ class TemplateManager:
                 return
 
             with open(self.template_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                template_data = json.load(f)
 
-            # Validate structure
-            self._validate_template_structure(data)
+            # Validate template structure
+            self._validate_template_structure(template_data)
 
-            # Load metadata
-            if 'metadata' in data:
-                meta = data['metadata']
+            # Load template metadata
+            if 'metadata' in template_data:
+                meta = template_data['metadata']
                 self.metadata = TemplateMetadata(
                     version=meta.get('version', '1.0.0'),
                     last_updated=meta.get('last_updated', 'unknown'),
@@ -87,15 +99,38 @@ class TemplateManager:
 
             # Load templates
             self.templates = {}
-            for layer_name, layer_templates in data.get('templates', {}).items():
+            for layer_name, layer_templates in template_data.get('templates', {}).items():
                 self.templates[layer_name] = {}
-                for template_name, template_data in layer_templates.items():
+                for template_name, template_data_item in layer_templates.items():
                     template = Template(
-                        template=template_data['template'],
-                        placeholders=template_data.get('placeholders', []),
-                        metadata=template_data.get('metadata')
+                        template=template_data_item['template'],
+                        placeholders=template_data_item.get('placeholders', []),
+                        metadata=template_data_item.get('metadata')
                     )
                     self.templates[layer_name][template_name] = template
+
+            # Load LLM configurations
+            if os.path.exists(self.llm_config_file):
+                with open(self.llm_config_file, 'r', encoding='utf-8') as f:
+                    llm_data = json.load(f)
+
+                # Load LLM metadata
+                if 'metadata' in llm_data:
+                    self.llm_metadata = llm_data['metadata']
+
+                # Load LLM configs
+                self.llm_configs = llm_data.get('layer_configs', {})
+
+                self.logger.info(
+                    "Loaded LLM configs for %d layer components from %s",
+                    len(self.llm_configs),
+                    self.llm_config_file
+                )
+            else:
+                self.logger.warning(
+                    "LLM config file not found at %s, LLM configs will not be available",
+                    self.llm_config_file
+                )
 
             self._loaded = True
             self.logger.info(
@@ -105,7 +140,7 @@ class TemplateManager:
             )
 
         except Exception as e:
-            self.logger.error("Failed to load templates: %s", e)
+            self.logger.error("Failed to load templates and LLM configs: %s", e)
             self._loaded = False
             raise ConfigurationError(f"Template loading failed: {e}") from e
 
@@ -150,6 +185,50 @@ class TemplateManager:
             return None
 
         return self.templates.get(layer, {}).get(name)
+
+    def get_llm_config(self, layer: str, name: str) -> Optional[LLMConfig]:
+        """Get LLM configuration for a layer component.
+
+        Args:
+            layer: Layer name (e.g., 'layer1', 'layer2')
+            name: Component name (e.g., 'reformulator_node', 'semantic_node')
+
+        Returns:
+            LLMConfig object or None if not found
+        """
+        if not self._loaded:
+            return None
+
+        config_key = f"{layer}.{name}"
+        config_data = self.llm_configs.get(config_key)
+
+        if config_data:
+            try:
+                # Create LLMConfig from the configuration data
+                return LLMConfig(**config_data)
+            except Exception as e:
+                self.logger.warning(
+                    "Failed to create LLMConfig for %s: %s",
+                    config_key, e
+                )
+                return None
+
+        # Try to get defaults if available
+        defaults = self.llm_configs.get('defaults')
+        if defaults:
+            try:
+                self.logger.info(
+                    "Using default LLM config for %s",
+                    config_key
+                )
+                return LLMConfig(**defaults)
+            except Exception as e:
+                self.logger.warning(
+                    "Failed to create default LLMConfig: %s", e
+                )
+
+        self.logger.warning("No LLM config found for %s", config_key)
+        return None
 
     def render_template(self, layer: str, name: str, **kwargs) -> str:
         """Render a template with the given parameters.

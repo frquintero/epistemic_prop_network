@@ -4,6 +4,7 @@ import asyncio
 from typing import Dict, Any, Optional, Tuple
 
 from core.logging_config import get_logger
+from core.llm_client import LLMConfig
 from core.schemas import Phase2Triple, Phase3Triple
 from .correspondence_validator import CorrespondenceValidator
 from .coherence_validator import CoherenceValidator
@@ -15,11 +16,22 @@ logger = get_logger(__name__)
 class Layer3ValidationManager:
     """Manages parallel execution of Layer 3 validation agents."""
 
-    def __init__(self):
-        """Initialize the validation manager with all three validators."""
-        self.correspondence_validator = CorrespondenceValidator()
-        self.coherence_validator = CoherenceValidator()
-        self.pragmatic_validator = PragmaticValidator()
+    def __init__(self, llm_configs: Optional[Dict[str, LLMConfig]] = None):
+        """Initialize the validation manager with all three validators.
+
+        Args:
+            llm_configs: Optional dict of LLM configurations keyed by validator name.
+        """
+        self.llm_configs = llm_configs or {}
+        self.correspondence_validator = CorrespondenceValidator(
+            llm_config=self.llm_configs.get('correspondence_validator')
+        )
+        self.coherence_validator = CoherenceValidator(
+            llm_config=self.llm_configs.get('coherence_validator')
+        )
+        self.pragmatic_validator = PragmaticValidator(
+            llm_config=self.llm_configs.get('pragmatic_validator')
+        )
 
     async def process(self, phase2_triple: Phase2Triple) -> Phase3Triple:
         """Process Phase 2 triple through all three validation agents in parallel.

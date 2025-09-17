@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Detailed inspection test showing all prompts, raw outputs, and LLM configs per layer."""
 
+import argparse
 import asyncio
 import os
 import sys
@@ -10,6 +11,7 @@ from typing import Dict, Any
 from core.schemas import NetworkRequest
 from core.config import NetworkConfig
 from core.llm_client import LLMClient, LLMConfig
+from core.template_manager import get_template_manager
 from layers.layer1_reformulation import Reformulator
 from layers.layer2_definition import Layer2DefinitionManager
 from layers.layer3_validation import Layer3ValidationManager
@@ -20,67 +22,36 @@ class DetailedInspectionNetwork:
     """Network that shows detailed prompts, outputs, and configs for each layer."""
 
     def __init__(self):
-        """Initialize with detailed logging and custom LLM configurations."""
+        """Initialize with centralized LLM configurations."""
         
-        # Create different LLM configs for different layers
-        base_config = {
-            "api_key": os.getenv("GROQ_API_KEY", ""),
-            "model": "openai/gpt-oss-120b",
-            "max_tokens": 8192,
-            "timeout": 120.0,
-            "max_retries": 3
+        # Get template manager for centralized LLM configurations
+        template_manager = get_template_manager()
+        
+        # Get LLM configurations for each layer component
+        self.llm_configs = {
+            'reformulator_node': template_manager.get_llm_config('layer1', 'reformulator_node'),
+            'semantic_node': template_manager.get_llm_config('layer2', 'semantic_node'),
+            'genealogical_node': template_manager.get_llm_config('layer2', 'genealogical_node'),
+            'teleological_node': template_manager.get_llm_config('layer2', 'teleological_node'),
+            'coherence_validator': template_manager.get_llm_config('layer3', 'coherence_validator'),
+            'correspondence_validator': template_manager.get_llm_config('layer3', 'correspondence_validator'),
+            'pragmatic_validator': template_manager.get_llm_config('layer3', 'pragmatic_validator'),
+            'synthesis_node': template_manager.get_llm_config('layer4', 'synthesis_node'),
         }
         
-        # Layers 1-3: temperature=0.8, reasoning_effort="medium"
-        llm_config_layers_1_3 = LLMConfig(
-            **base_config,
-            temperature=0.8,
-            reasoning_effort="medium"
-        )
-        
-        # Layer 4: temperature=0.6, reasoning_effort="high" 
-        llm_config_layer_4 = LLMConfig(
-            **base_config,
-            temperature=0.6,
-            reasoning_effort="high"
-        )
-        
-        # Create network configs
-        network_config_layers_1_3 = NetworkConfig(
-            groq_api_key=base_config["api_key"],
-            groq_model="openai/gpt-oss-120b",
-            temperature=0.8,
-            reasoning_effort="medium",
-            max_tokens_per_request=8192,
-            request_timeout=120.0,
-            max_retries=3
-        )
-        
-        network_config_layer_4 = NetworkConfig(
-            groq_api_key=base_config["api_key"],
-            groq_model="openai/gpt-oss-120b", 
-            temperature=0.6,
-            reasoning_effort="high",
-            max_tokens_per_request=8192,
-            request_timeout=120.0,
-            max_retries=3
-        )
-        
-        # Initialize agents with custom configs
-        self.reformulator = Reformulator(llm_client=LLMClient(config=llm_config_layers_1_3))
-        self.layer2_manager = Layer2DefinitionManager(network_config=network_config_layers_1_3)
-        self.layer3_manager = Layer3ValidationManager()
-        # Override the validators' LLM clients
-        self.layer3_manager.correspondence_validator = type(self.layer3_manager.correspondence_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer3_manager.coherence_validator = type(self.layer3_manager.coherence_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer3_manager.pragmatic_validator = type(self.layer3_manager.pragmatic_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer4_manager = Layer4SynthesisManager(network_config=network_config_layer_4)
+        # Initialize agents with centralized configs
+        self.reformulator = Reformulator(llm_config=self.llm_configs['reformulator_node'])
+        self.layer2_manager = Layer2DefinitionManager(llm_configs={
+            'semantic_node': self.llm_configs['semantic_node'],
+            'genealogical_node': self.llm_configs['genealogical_node'],
+            'teleological_node': self.llm_configs['teleological_node'],
+        })
+        self.layer3_manager = Layer3ValidationManager(llm_configs={
+            'coherence_validator': self.llm_configs['coherence_validator'],
+            'correspondence_validator': self.llm_configs['correspondence_validator'],
+            'pragmatic_validator': self.llm_configs['pragmatic_validator'],
+        })
+        self.layer4_manager = Layer4SynthesisManager(llm_config=self.llm_configs['synthesis_node'])
 
     def _extract_metadata_from_question(self, question: str) -> Dict[str, Any]:
         """Extract metadata from question."""
@@ -115,14 +86,12 @@ class DetailedInspectionNetwork:
 
             # Show LLM config for Layer 1
             print("🤖 LLM Configuration:")
-            # Trigger lazy loading of config and LLM client
-            _ = self.reformulator.config
-            if self.reformulator.llm_client:
-                print(f"   Model: {self.reformulator.llm_client.config.model}")
-                print(f"   Temperature: {self.reformulator.llm_client.config.temperature}")
-                print(f"   Max Tokens: {self.reformulator.llm_client.config.max_tokens}")
-            else:
-                print("   LLM Client: Not initialized yet")
+            config = self.llm_configs['reformulator_node']
+            print(f"   Model: {config.model}")
+            print(f"   Temperature: {config.temperature}")
+            print(f"   Max Tokens: {config.max_tokens}")
+            if hasattr(config, 'tools') and config.tools:
+                print(f"   Tools: {len(config.tools)} available")
             print()
 
             # Show the prompt that will be sent
@@ -150,20 +119,18 @@ class DetailedInspectionNetwork:
 
             # Show configs for each node
             print("🤖 LLM Configurations for Layer 2 Nodes:")
-            for node_name, node in [
-                ("Semantic", self.layer2_manager.semantic_node),
-                ("Genealogical", self.layer2_manager.genealogical_node),
-                ("Teleological", self.layer2_manager.teleological_node)
+            for node_name, config_key in [
+                ("Semantic", 'semantic_node'),
+                ("Genealogical", 'genealogical_node'),
+                ("Teleological", 'teleological_node')
             ]:
-                # Trigger lazy loading
-                _ = node.config
+                config = self.llm_configs[config_key]
                 print(f"   {node_name} Node:")
-                if node.llm_client:
-                    print(f"     Model: {node.llm_client.config.model}")
-                    print(f"     Temperature: {node.llm_client.config.temperature}")
-                    print(f"     Max Tokens: {node.llm_client.config.max_tokens}")
-                else:
-                    print("     LLM Client: Not initialized yet")
+                print(f"     Model: {config.model}")
+                print(f"     Temperature: {config.temperature}")
+                print(f"     Max Tokens: {config.max_tokens}")
+                if hasattr(config, 'tools') and config.tools:
+                    print(f"     Tools: {len(config.tools)} available")
             print()
 
             # Process Layer 2
@@ -204,20 +171,18 @@ class DetailedInspectionNetwork:
 
             # Show configs for each validator
             print("🤖 LLM Configurations for Layer 3 Validators:")
-            for validator_name, validator in [
-                ("Correspondence", self.layer3_manager.correspondence_validator),
-                ("Coherence", self.layer3_manager.coherence_validator),
-                ("Pragmatic", self.layer3_manager.pragmatic_validator)
+            for validator_name, config_key in [
+                ("Correspondence", 'correspondence_validator'),
+                ("Coherence", 'coherence_validator'),
+                ("Pragmatic", 'pragmatic_validator')
             ]:
-                # Trigger lazy loading
-                _ = validator.config
+                config = self.llm_configs[config_key]
                 print(f"   {validator_name} Validator:")
-                if validator.llm_client:
-                    print(f"     Model: {validator.llm_client.config.model}")
-                    print(f"     Temperature: {validator.llm_client.config.temperature}")
-                    print(f"     Max Tokens: {validator.llm_client.config.max_tokens}")
-                else:
-                    print("     LLM Client: Not initialized yet")
+                print(f"     Model: {config.model}")
+                print(f"     Temperature: {config.temperature}")
+                print(f"     Max Tokens: {config.max_tokens}")
+                if hasattr(config, 'tools') and config.tools:
+                    print(f"     Tools: {len(config.tools)} available")
             print()
 
             # Process Layer 3
@@ -258,14 +223,12 @@ class DetailedInspectionNetwork:
 
             # Show config for synthesis
             print("🤖 LLM Configuration for Layer 4 Synthesis:")
-            # Trigger lazy loading
-            _ = self.layer4_manager.synthesis_node.config
-            if self.layer4_manager.synthesis_node.llm_client:
-                print(f"   Model: {self.layer4_manager.synthesis_node.llm_client.config.model}")
-                print(f"   Temperature: {self.layer4_manager.synthesis_node.llm_client.config.temperature}")
-                print(f"   Max Tokens: {self.layer4_manager.synthesis_node.llm_client.config.max_tokens}")
-            else:
-                print("   LLM Client: Not initialized yet")
+            config = self.llm_configs['synthesis_node']
+            print(f"   Model: {config.model}")
+            print(f"   Temperature: {config.temperature}")
+            print(f"   Max Tokens: {config.max_tokens}")
+            if hasattr(config, 'tools') and config.tools:
+                print(f"   Tools: {len(config.tools)} available")
             print()
 
             # Show the prompt that will be sent
@@ -296,12 +259,40 @@ class DetailedInspectionNetwork:
 
 async def main():
     """Main entry point for detailed inspection."""
+    parser = argparse.ArgumentParser(
+        description="Detailed inspection of the Epistemological Propagation Network",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s "What are mental models?"
+  %(prog)s --mock "What are mental models?"
+        """
+    )
+    parser.add_argument(
+        'question',
+        nargs='*',
+        help='The question to process through the network'
+    )
+    parser.add_argument(
+        '--mock',
+        action='store_true',
+        help='Use mock LLM responses for testing (no API calls)'
+    )
+
+    args = parser.parse_args()
+
+    # Set up mock responses based on the --mock flag
+    if args.mock:
+        os.environ['MOCK_RESPONSES'] = 'true'
+    else:
+        os.environ['MOCK_RESPONSES'] = 'false'
+
     print("🔍 Epistemological Propagation Network - Detailed Inspection Mode")
     print("This will show all prompts, raw outputs, and LLM configurations per layer.")
     print()
 
-    if len(sys.argv) > 1:
-        question = " ".join(sys.argv[1:])
+    if args.question:
+        question = " ".join(args.question)
     else:
         print("🤔 Please enter your question for detailed inspection:")
         try:

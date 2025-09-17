@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Dict, Any, Optional
 
-from core.llm_client import LLMClient
+from core.llm_client import LLMClient, LLMConfig
 from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
 from core.logging_config import get_logger
@@ -16,13 +16,19 @@ logger = None
 class CorrespondenceValidator:
     """Validates outputs against empirical evidence and observable reality."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None, llm_config: Optional[LLMConfig] = None):
         """Initialize the Correspondence Validator.
 
         Args:
             llm_client: Optional LLM client instance. If None, creates a new one.
+            llm_config: Optional LLM configuration. If provided, used to create LLM client.
         """
-        self.llm_client = llm_client or LLMClient()
+        if llm_client is not None:
+            self.llm_client = llm_client
+        elif llm_config is not None:
+            self.llm_client = LLMClient(config=llm_config)
+        else:
+            self.llm_client = LLMClient()
         self.config = get_config()
 
     async def process(self, phase2_triple: Phase2Triple) -> str:

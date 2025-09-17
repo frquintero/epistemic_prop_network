@@ -12,6 +12,7 @@ from datetime import datetime
 from core.config import get_config, init_config, NetworkConfig
 from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
 from core.logging_config import get_logger
+from core.llm_client import LLMConfig
 from core.schemas import Phase3Triple, SynthesisOutput
 
 from .synthesis_node import SynthesisNode
@@ -24,18 +25,20 @@ class Layer4SynthesisManager:
     previous layers into holistic narratives with epistemological rigor.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None):
+    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_config: Optional[LLMConfig] = None):
         """Initialize the Layer 4 Synthesis Manager.
 
         Args:
             network_config: Optional network configuration. If None, uses default config.
+            llm_config: Optional LLM configuration for synthesis node.
         """
         self.logger = get_logger(__name__)
         self.network_config = network_config
+        self.llm_config = llm_config
         self._config: Optional[NetworkConfig] = None
 
         # Initialize the synthesis node
-        self.synthesis_node = SynthesisNode(network_config=self.config)
+        self.synthesis_node = SynthesisNode(network_config=self.config, llm_config=self.llm_config)
 
     @property
     def config(self):

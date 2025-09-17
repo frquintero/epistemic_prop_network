@@ -14,6 +14,7 @@ from rich.markdown import Markdown
 from core.schemas import NetworkRequest
 from core.config import NetworkConfig, init_config
 from core.llm_client import LLMClient, LLMConfig
+from core.template_manager import get_template_manager
 from layers.layer1_reformulation import Reformulator
 from layers.layer2_definition import Layer2DefinitionManager
 from layers.layer3_validation import Layer3ValidationManager
@@ -28,68 +29,37 @@ class EpistemologicalPropagationNetwork:
     """Main interface for the Epistemological Propagation Network."""
 
     def __init__(self, enable_structlog: bool = False):
-        """Initialize the EPN with all layer managers and optimized LLM configurations."""
+        """Initialize the EPN with all layer managers using centralized LLM configurations."""
         self.enable_structlog = enable_structlog
         
-        # Create different LLM configs for different layers
-        base_config = {
-            "api_key": os.getenv("GROQ_API_KEY", ""),
-            "model": "openai/gpt-oss-120b",
-            "max_tokens": 8192,
-            "timeout": 120.0,
-            "max_retries": 3
+        # Get template manager for centralized LLM configurations
+        template_manager = get_template_manager()
+        
+        # Get LLM configurations for each layer component
+        llm_configs = {
+            'reformulator_node': template_manager.get_llm_config('layer1', 'reformulator_node'),
+            'semantic_node': template_manager.get_llm_config('layer2', 'semantic_node'),
+            'genealogical_node': template_manager.get_llm_config('layer2', 'genealogical_node'),
+            'teleological_node': template_manager.get_llm_config('layer2', 'teleological_node'),
+            'coherence_validator': template_manager.get_llm_config('layer3', 'coherence_validator'),
+            'correspondence_validator': template_manager.get_llm_config('layer3', 'correspondence_validator'),
+            'pragmatic_validator': template_manager.get_llm_config('layer3', 'pragmatic_validator'),
+            'synthesis_node': template_manager.get_llm_config('layer4', 'synthesis_node'),
         }
         
-        # Layers 1-3: temperature=0.8, reasoning_effort="medium"
-        llm_config_layers_1_3 = LLMConfig(
-            **base_config,
-            temperature=0.8,
-            reasoning_effort="medium"
-        )
-        
-        # Layer 4: temperature=0.6, reasoning_effort="high" 
-        llm_config_layer_4 = LLMConfig(
-            **base_config,
-            temperature=0.6,
-            reasoning_effort="high"
-        )
-        
-        # Create network configs
-        network_config_layers_1_3 = NetworkConfig(
-            groq_api_key=base_config["api_key"],
-            groq_model="openai/gpt-oss-120b",
-            temperature=0.8,
-            reasoning_effort="medium",
-            max_tokens_per_request=8192,
-            request_timeout=120.0,
-            max_retries=3
-        )
-        
-        network_config_layer_4 = NetworkConfig(
-            groq_api_key=base_config["api_key"],
-            groq_model="openai/gpt-oss-120b", 
-            temperature=0.6,
-            reasoning_effort="high",
-            max_tokens_per_request=8192,
-            request_timeout=120.0,
-            max_retries=3
-        )
-        
-        # Initialize agents with optimized configs
-        self.reformulator = Reformulator(llm_client=LLMClient(config=llm_config_layers_1_3))
-        self.layer2_manager = Layer2DefinitionManager(network_config=network_config_layers_1_3)
-        self.layer3_manager = Layer3ValidationManager()
-        # Override the validators' LLM clients with optimized config
-        self.layer3_manager.correspondence_validator = type(self.layer3_manager.correspondence_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer3_manager.coherence_validator = type(self.layer3_manager.coherence_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer3_manager.pragmatic_validator = type(self.layer3_manager.pragmatic_validator)(
-            llm_client=LLMClient(config=llm_config_layers_1_3)
-        )
-        self.layer4_manager = Layer4SynthesisManager(network_config=network_config_layer_4)
+        # Initialize agents with centralized configs
+        self.reformulator = Reformulator(llm_config=llm_configs['reformulator_node'])
+        self.layer2_manager = Layer2DefinitionManager(llm_configs={
+            'semantic_node': llm_configs['semantic_node'],
+            'genealogical_node': llm_configs['genealogical_node'],
+            'teleological_node': llm_configs['teleological_node'],
+        })
+        self.layer3_manager = Layer3ValidationManager(llm_configs={
+            'coherence_validator': llm_configs['coherence_validator'],
+            'correspondence_validator': llm_configs['correspondence_validator'],
+            'pragmatic_validator': llm_configs['pragmatic_validator'],
+        })
+        self.layer4_manager = Layer4SynthesisManager(llm_config=llm_configs['synthesis_node'])
 
     def _extract_metadata_from_question(self, question: str) -> Dict[str, Any]:
         """Automatically extract metadata from the question content."""
@@ -196,6 +166,7 @@ async def main():
 Examples:
   %(prog)s "What are mental models?"
   %(prog)s --structlog "What are mental models?"
+  %(prog)s --mock "What are mental models?"
   %(prog)s  # Interactive mode
         """
     )
@@ -209,6 +180,11 @@ Examples:
         action='store_true',
         help='Enable detailed structured logging for debugging'
     )
+    parser.add_argument(
+        '--mock',
+        action='store_true',
+        help='Use mock LLM responses for testing (no API calls)'
+    )
 
     args = parser.parse_args()
 
@@ -217,6 +193,12 @@ Examples:
         os.environ['STRUCTURED_LOGGING'] = 'true'
     else:
         os.environ['STRUCTURED_LOGGING'] = 'false'
+
+    # Set up mock responses based on the --mock flag
+    if args.mock:
+        os.environ['MOCK_RESPONSES'] = 'true'
+    else:
+        os.environ['MOCK_RESPONSES'] = 'false'
 
     # Initialize configuration with proper logging setup
     init_config()

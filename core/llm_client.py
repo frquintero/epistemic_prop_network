@@ -25,6 +25,7 @@ class LLMConfig(BaseModel):
     max_tokens: int = 8192
     top_p: float = 1.0
     reasoning_effort: str = "medium"
+    reasoning_format: Optional[str] = None
     tools: List[Dict[str, Any]] = []
     timeout: float = 120.0
     max_retries: int = 3
@@ -131,10 +132,18 @@ class LLMClient:
             "temperature": self.config.temperature,
             "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
-            "reasoning_effort": self.config.reasoning_effort,
             "timeout": self.config.timeout,
             **kwargs
         }
+
+        # Conditionally add reasoning_effort if supported by the model
+        reasoning_effort = self._get_supported_reasoning_effort()
+        if reasoning_effort is not None:
+            params["reasoning_effort"] = reasoning_effort
+
+        # Add reasoning_format if specified
+        if self.config.reasoning_format is not None:
+            params["reasoning_format"] = self.config.reasoning_format
 
         # Only add tools if they are provided
         if self.config.tools:
@@ -151,7 +160,8 @@ class LLMClient:
             try:
                 logger.info("Making LLM request             attempt=%d", attempt + 1)
                 response = await self.async_client.chat.completions.create(**params)
-                return response.choices[0].message.content or ""
+                content = response.choices[0].message.content or ""
+                return self._clean_reasoning_tags(content)
 
             except Exception as e:
                 logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
@@ -191,14 +201,22 @@ class LLMClient:
             "temperature": self.config.temperature,
             "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
-            "reasoning_effort": self.config.reasoning_effort,
             "timeout": self.config.timeout,
             **kwargs
         }
 
+        # Conditionally add reasoning_effort if supported by the model
+        reasoning_effort = self._get_supported_reasoning_effort()
+        if reasoning_effort is not None:
+            params["reasoning_effort"] = reasoning_effort
+
         # Only add tools if they are provided
         if self.config.tools:
             params["tools"] = self.config.tools
+
+        # Add reasoning_format if specified
+        if self.config.reasoning_format:
+            params["reasoning_format"] = self.config.reasoning_format
 
         if response_format:
             params["response_format"] = response_format
@@ -211,7 +229,8 @@ class LLMClient:
             try:
                 logger.info("Making synchronous LLM request             attempt=%d", attempt + 1)
                 response = self.client.chat.completions.create(**params)
-                return response.choices[0].message.content or ""
+                content = response.choices[0].message.content or ""
+                return self._clean_reasoning_tags(content)
 
             except Exception as e:
                 logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
@@ -304,7 +323,52 @@ class LLMClient:
                 mock_result[key] = None
         return mock_result
 
+    def _get_supported_reasoning_effort(self) -> Optional[str]:
+        """Get reasoning_effort value if supported by the model, otherwise None."""
+        model = self.config.model.lower()
+        
+        # Models that support reasoning_effort with specific values
+        if "gpt-oss" in model:
+            # GPT-OSS models support "low", "medium", "high"
+            effort = self.config.reasoning_effort.lower()
+            if effort in ["low", "medium", "high"]:
+                return effort
+            elif effort == "default":
+                return "medium"  # Map default to medium
+            elif effort == "none":
+                return "low"  # Map none to low
+            else:
+                return "medium"  # Default fallback
+        
+        # Models that don't support reasoning_effort at all
+        elif "qwen" in model or "compound" in model:
+            return None  # Don't include reasoning_effort parameter
+        
+        # Default: include as-is (for future models)
+        return self.config.reasoning_effort
 
+    def _clean_reasoning_tags(self, content: str) -> str:
+        """Clean reasoning tags from LLM response content.
+        
+        Removes <think>...</think> tags while preserving the final answer.
+        This ensures clean output even if reasoning_format parameter doesn't work.
+        
+        Args:
+            content: Raw LLM response content
+            
+        Returns:
+            Cleaned content with reasoning tags removed
+        """
+        import re
+        
+        # Remove <think> tags and their content
+        # Pattern matches <think> opening tag, captures everything until </think> closing tag, removes both
+        cleaned = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        
+        # Also handle unclosed <think> tags (in case of truncation)
+        cleaned = re.sub(r'<think>.*$', '', cleaned, flags=re.DOTALL)
+        
+        return cleaned.strip()
 # Global client instance
 _default_client: Optional[LLMClient] = None
 

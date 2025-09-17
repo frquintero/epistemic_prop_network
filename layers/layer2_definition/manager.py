@@ -11,7 +11,7 @@ from datetime import datetime
 
 from core.config import get_config, init_config, NetworkConfig
 from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
-from core.llm_client import LLMClient
+from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion, Phase2Triple
 
@@ -27,20 +27,31 @@ class Layer2DefinitionManager:
     to generate comprehensive conceptual definitions.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None):
+    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_configs: Optional[Dict[str, LLMConfig]] = None):
         """Initialize the Layer 2 Definition Manager.
 
         Args:
             network_config: Optional network configuration. If None, uses default config.
+            llm_configs: Optional dict of LLM configurations keyed by node name.
         """
         self.logger = get_logger(__name__)
         self.network_config = network_config
+        self.llm_configs = llm_configs or {}
         self._config: Optional[NetworkConfig] = None
 
         # Initialize the three definition nodes
-        self.semantic_node = SemanticNode(network_config=self.config)
-        self.genealogical_node = GenealogicalNode(network_config=self.config)
-        self.teleological_node = TeleologicalNode(network_config=self.config)
+        self.semantic_node = SemanticNode(
+            network_config=self.config,
+            llm_config=self.llm_configs.get('semantic_node')
+        )
+        self.genealogical_node = GenealogicalNode(
+            network_config=self.config,
+            llm_config=self.llm_configs.get('genealogical_node')
+        )
+        self.teleological_node = TeleologicalNode(
+            network_config=self.config,
+            llm_config=self.llm_configs.get('teleological_node')
+        )
 
     @property
     def config(self):

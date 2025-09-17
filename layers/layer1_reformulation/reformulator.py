@@ -12,7 +12,7 @@ from datetime import datetime
 
 from core.config import get_config, init_config, NetworkConfig
 from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
-from core.llm_client import LLMClient
+from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import NetworkRequest, ReformulatedQuestion
 from core.template_manager import get_template_manager
@@ -26,14 +26,16 @@ class Reformulator:
     without providing answers.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None, llm_config: Optional[LLMConfig] = None):
         """Initialize the Reformulator agent.
 
         Args:
             llm_client: Optional LLM client instance. If None, creates a new one.
+            llm_config: Optional LLM configuration. If provided, used to create LLM client.
         """
         self.logger = get_logger(__name__)
         self.llm_client = llm_client
+        self.llm_config = llm_config
         self._config: Optional[NetworkConfig] = None
 
     @property
@@ -67,7 +69,10 @@ class Reformulator:
     def _get_llm_client(self) -> LLMClient:
         """Lazily create or return the configured LLM client."""
         if self.llm_client is None:
-            self.llm_client = LLMClient(network_config=self.config)
+            if self.llm_config is not None:
+                self.llm_client = LLMClient(config=self.llm_config)
+            else:
+                self.llm_client = LLMClient(network_config=self.config)
         return self.llm_client
 
     async def process(self, request: NetworkRequest) -> ReformulatedQuestion:
