@@ -2,12 +2,12 @@
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-from core.llm_client import LLMClient, LLMConfig
-from core.schemas import Phase2Triple, Phase3Triple
 from core.config import get_config
+from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
+from core.schemas import Phase2Triple, Phase3Triple
 from core.template_manager import get_template_manager
 
 logger = None
@@ -16,7 +16,11 @@ logger = None
 class PragmaticValidator:
     """Validates practical utility and real-world applicability of outputs."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None, llm_config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        llm_client: Optional[LLMClient] = None,
+        llm_config: Optional[LLMConfig] = None,
+    ):
         """Initialize the Pragmatic Validator.
 
         Args:
@@ -53,7 +57,9 @@ class PragmaticValidator:
                 max_tokens=self.config.max_tokens_per_request,
             )
 
-            logger.info("Pragmatic validation completed | output_length=%d", len(response))
+            logger.info(
+                "Pragmatic validation completed | output_length=%d", len(response)
+            )
             return response
 
         except Exception as e:
@@ -75,7 +81,7 @@ class PragmaticValidator:
             name="pragmatic_validator",
             phase2_triple_semantic=phase2_triple.semantic,
             phase2_triple_genealogical=phase2_triple.genealogical,
-            phase2_triple_teleological=phase2_triple.teleological
+            phase2_triple_teleological=phase2_triple.teleological,
         )
 
     def _get_fallback_response(self) -> str:
@@ -84,5 +90,7 @@ class PragmaticValidator:
         Returns:
             Generic fallback validation response
         """
-        return ("Pragmatic validation encountered an error. The practical utility of the outputs cannot be assessed at this time. "
-                "Manual evaluation of real-world applications and practical value is recommended.")
+        return (
+            "Pragmatic validation encountered an error. The practical utility of the outputs cannot be assessed at this time. "
+            "Manual evaluation of real-world applications and practical value is recommended."
+        )

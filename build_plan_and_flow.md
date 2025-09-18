@@ -33,7 +33,7 @@ This document outlines the systematic implementation and data flow of the Episte
 **Core Data Models (Pydantic):**
 
 - `Phase2Triple`: Semantic, Genealogical, Teleological outputs with validation
-- `Phase3Triple`: Correspondence, Coherence, Pragmatic validation outputs
+- `Phase3Triple`: Correspondence, Coherence, Pragmatic, Tension validation outputs
 - `ReformulatedQuestion`: Bias-free reformulation with context tracking
 - `SynthesisOutput`: Final integrated narrative with thesis and qualifications
 - `NetworkRequest`: Input processing with metadata support
@@ -167,21 +167,21 @@ This document outlines the systematic implementation and data flow of the Episte
 
 ### Phase 4 Objectives
 
-- Implement three validation agents
-- Create correspondence, coherence, and pragmatic validation logic
+- Implement four validation agents
+- Create correspondence, coherence, pragmatic, and tension validation logic
 - Establish validation result aggregation
 
 ### Phase 4 Implementation Tasks ✅
 
-1. ✅ Implement `CorrespondenceValidator`, `CoherenceValidator`, `PragmaticValidator` classes
+1. ✅ Implement `CorrespondenceValidator`, `CoherenceValidator`, `PragmaticValidator`, `TensionValidator` classes
 2. ✅ Create validation scoring and assessment logic
 3. ✅ Implement triple input processing (`{O_s, O_g, O_t}`)
-4. ✅ Add validation result aggregation (`{V_c, V_l, V_p}`)
+4. ✅ Add validation result aggregation (`{V_c, V_l, V_p, V_t}`)
 5. ✅ Create validation failure handling and reporting
 
 ### Phase 4 Network Flow Details
 
-#### Validation Nodes: Correspondence Validator, Coherence Validator, Pragmatic Validator
+#### Validation Nodes: Correspondence Validator, Coherence Validator, Pragmatic Validator, Tension Validator
 
 ##### Correspondence Validator
 
@@ -189,7 +189,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Empirical validation results.
-- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
+- **LLM Configuration:** Temperature 0.5, reasoning effort "default", max tokens 2000
 
 ##### Coherence Validator
 
@@ -197,7 +197,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Logical validation results.
-- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
+- **LLM Configuration:** Temperature 0.5, reasoning effort "default", max tokens 2000
 
 ##### Pragmatic Validator
 
@@ -205,7 +205,15 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
 - **Prompt:** [triple] + [Task]
 - **Expected Output:** Practical validation results.
-- **LLM Configuration:** Temperature 0.8, reasoning effort "medium", max tokens 8192
+- **LLM Configuration:** Temperature 0.5, reasoning effort "default", max tokens 2000
+
+##### Tension Validator
+
+- **Task:** "Identify and resolve tensions among semantic, genealogical, and teleological analyses."
+- **Input:** Triple `{O_s, O_g, O_t}` from Phase 3.
+- **Prompt:** [triple] + [Task]
+- **Expected Output:** Narrative outlining conflicts, their sources, and proposed reconciliations.
+- **LLM Configuration:** Temperature 0.5, reasoning effort "default", max tokens 2000
 
 ### Phase 4 Validation Steps ✅
 
@@ -213,7 +221,7 @@ This document outlines the systematic implementation and data flow of the Episte
 - **Network Flow Alignment**: ✅ Verify validation triple format matches Phase 3 → Phase 4 interface in `build_plan_and_flow.md`
 - **Agent Specifications**: ✅ Ensure validator behaviors match agent descriptions in `agents.md` "Layer 3: Validation Agents"
 - **Model Integration**: ✅ Test structured outputs for validation results using `gpt-oss-120b-guide.md` schema patterns
-- **Testing**: ✅ Unit tests for each validator, integration tests for triple processing, validation accuracy tests (9/9 tests passing)
+- **Testing**: ✅ Unit tests for each validator, integration tests for triple processing, validation accuracy tests (12/12 tests passing)
 
 **Completion Status:** Phase 4 achieved 100% validation score with all components functional and tested.
 
@@ -239,11 +247,11 @@ This document outlines the systematic implementation and data flow of the Episte
 
 #### Node: Synthesis Node
 
-- **Task:** "Synthesize the following validated outputs into a holistic narrative. Include a definition, history, function, validation-based qualifications, and a thesis."
-- **Input:** Triple `{V_c, V_l, V_p}` from Phase 4.
-- **Prompt:** [triple] + [Task]
-- **Expected Output:** A comprehensive, narrative-driven answer with a thesis.
-- **LLM Configuration:** Temperature 0.6, reasoning effort "high", max tokens 8192
+- **Task:** "Integrate correspondence, coherence, pragmatic, and tension analyses into a cohesive narrative. Resolve conflicts, surface qualifications, and conclude with a clear thesis."
+- **Input:** Quadruple `{V_c, V_l, V_p, V_t}` from Phase 4.
+- **Prompt:** Quadruple payload embedded in a tension-aware synthesis template with explicit narrative, thesis, and value-delivery requirements.
+- **Expected Output:** A comprehensive, narrative-driven answer (≤500 words) that addresses tensions and ends with a marked thesis.
+- **LLM Configuration:** Temperature 0.5, reasoning effort "default", max tokens 4000
 
 ### Phase 5 Validation Steps ✅
 

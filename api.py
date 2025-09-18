@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """FastAPI web service for the Epistemological Propagation Network."""
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-import uvicorn
 import asyncio
 import os
 from datetime import datetime
+from typing import Optional
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from main import EpistemologicalPropagationNetwork
 
 
 class QuestionRequest(BaseModel):
     """Request model for user questions."""
+
     question: str
     user_id: Optional[str] = None
 
 
 class QuestionResponse(BaseModel):
     """Response model for EPN results."""
+
     success: bool
     request_id: str
     original_question: str
@@ -32,7 +35,7 @@ class QuestionResponse(BaseModel):
 app = FastAPI(
     title="Epistemological Propagation Network API",
     description="A sophisticated multi-layer LLM system for rigorous epistemological inquiry",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Global EPN instance
@@ -75,7 +78,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "service": "Epistemological Propagation Network"
+        "service": "Epistemological Propagation Network",
     }
 
 
@@ -87,16 +90,16 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "POST /api/query": "Process a question through the EPN",
-            "GET /api/health": "Health check"
+            "GET /api/health": "Health check",
         },
         "example": {
             "method": "POST",
             "url": "/api/query",
             "body": {
                 "question": "What does Tezcatlipoca mean to our current society?",
-                "user_id": "optional_user_id"
-            }
-        }
+                "user_id": "optional_user_id",
+            },
+        },
     }
 
 

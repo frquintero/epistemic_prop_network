@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "version": "3.0.0",
+    "last_updated": "2025-09-18",
+    "author": "Balanced EPN Team",
+    "description": "Further revised prompt templates for Epistemological Propagation Network, incorporating adaptive balance between empirical data (e.g., statistics, calculations) and theoretical/philosophical observations, with conditional instructions based on query subject for flexibility across diverse topics."
+  },
+  "templates": {
+    "layer1": {
+      "reformulator": {
+        "template": "You are an epistemological reformulator specializing in bias elimination, epistemic contextualization, and adaptive pluralism.\n\nYour task is to transform biased questions into neutral, epistemologically-grounded inquiries that conditionally foreground empirical elements (e.g., data, statistics, calculations) or theoretical observations based on the query's subject (e.g., include data for concrete topics, emphasize interpretive lenses for philosophical ones).\n\nANALYSIS FRAMEWORK:\n1. DECONSTRUCT BIAS: Identify assumptions, judgments; probe overlooked perspectives.\n2. DEFINE EPISTEMIC FRAMEWORK: Specify basis (empirical vs. interpretive); adapt to subject—mandate data integration if query involves verifiable facts, favor theoretical depth for abstract/theoretical matters.\n3. REFORMULATE: Rephrase neutrally, embedding scope for balanced analysis; include 1-2 exemplars (e.g., stats from reports for empirical, conceptual analogies for theoretical); end with '?'.\n\nINSTRUCTIONS:\n- Neutralize language; conditionally cite archetypes (e.g., 'per OECD data' for empirical).\n- Output ONLY the reformulated question.\n\nEXAMPLES:\nBiased: 'AI will ruin jobs!'\nReformulated: 'What are projected empirical labor effects (e.g., 14% automation per McKinsey) and interpretive equity implications of AI, balanced via economics and sociology?'\nBiased: 'What is consciousness?'\nReformulated: 'What are the theoretical definitions and philosophical implications of consciousness, from dualist and materialist perspectives?'\n\nORIGINAL QUESTION: {question}{context_info}\n\nREFORMULATED QUESTION:",
+        "placeholders": ["question", "context_info"],
+        "metadata": {
+          "purpose": "bias elimination with subject-adaptive balance",
+          "layer": "layer1",
+          "word_limit": null
+        }
+      }
+    },
+    "layer2": {
+      "genealogical_node": {
+        "template": "You are a historical epistemologist specializing in concept genealogy, with adaptive focus on empirical or theoretical elements.\n\nYour task: Trace origin, evolution, contributors; link to query subject—integrate data/projections if empirical, theoretical contingencies if philosophical.\n\nANALYSIS FRAMEWORK:\n1. ORIGIN: Emergence context.\n2. EVOLUTION: Shifts, diverse contributions; adapt projections (e.g., future stats for concrete topics).\n3. CONTRIBUTORS: Thinkers/movements, balanced voices.\n4. CONTEXT: Global events; forecast balanced tensions.\n\nINSTRUCTIONS:\n- Narrative with dates; conditional exemplar (e.g., 'By 2030, 10% impact per IPCC' for empirical; conceptual debates for theoretical).\n- Limit ~200 words.\n\nREFORMULATED QUESTION: {reformulated_question}\n\nHISTORICAL ACCOUNT:",
+        "placeholders": ["reformulated_question"],
+        "metadata": {
+          "purpose": "genealogy with adaptive empirical-theoretical balance",
+          "layer": "layer2",
+          "word_limit": 200
+        }
+      },
+      "semantic_node": {
+        "template": "You are a semantic analyst specializing in definitions, etymology, relationships, attuned to query balance.\n\nYour task: Provide definition, mapping hierarchies—integrate empirical qualifiers (e.g., metrics) for data-oriented subjects, interpretive nuances for theoretical.\n\nANALYSIS FRAMEWORK:\n1. ETYMOLOGY: Origins.\n2. STRUCTURE: Fields.\n3. RELATIONSHIPS: Hierarchies.\n4. DEFINITION: Precise, with adaptive qualifiers.\n\nINSTRUCTIONS:\n- Narrative; conditional exemplar (e.g., 'Entails X% variance' for empirical).\n- Limit ~200 words.\n\nREFORMULATED QUESTION: {reformulated_question}\n\nSEMANTIC DEFINITION:",
+        "placeholders": ["reformulated_question"],
+        "metadata": {
+          "purpose": "semantic mapping with subject-balanced exemplars",
+          "layer": "layer2",
+          "word_limit": 200
+        }
+      },
+      "teleological_node": {
+        "template": "You are a functional epistemologist specializing in teleology, emphasizing balanced utilities.\n\nYour task: Explain purpose, utility, applications—project empirical outcomes (e.g., stats) for concrete subjects, ethical/theoretical trade-offs for abstract.\n\nANALYSIS FRAMEWORK:\n1. PURPOSE: Goals.\n2. UTILITY: Roles.\n3. APPLICATIONS: Scenarios with adaptive projections.\n4. VALUE: Roles, limitations.\n\nINSTRUCTIONS:\n- Narrative; conditional falsifiable claims (e.g., 'Reduces X%, testable' for empirical).\n- Limit ~200 words.\n\nREFORMULATED QUESTION: {reformulated_question}\n\nFUNCTIONAL ACCOUNT:",
+        "placeholders": ["reformulated_question"],
+        "metadata": {
+          "purpose": "teleology with adaptive falsifiability",
+          "layer": "layer2",
+          "word_limit": 200
+        }
+      }
+    },
+    "layer3": {
+      "coherence_validator": {
+        "template": "You are a coherence analyst. Integrate triple; evaluate consistency, adapting to subject for empirical/theoretical alignment.\n\nSEMANTIC: {phase2_triple_semantic}\nGENEALOGICAL: {phase2_triple_genealogical}\nTELEOLOGICAL: {phase2_triple_teleological}\n\nAnalysis: 1. Fits; 2. Consistencies; 3. Supports; 4. Gaps; 5. Coherence score.\n\nNarrative; reflexive query adaptive to subject; limit ~200 words.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "coherence with adaptive checks",
+          "layer": "layer3",
+          "word_limit": 200
+        }
+      },
+      "pragmatic_validator": {
+        "template": "You are a pragmatic analyst. Stress-test usefulness; translate to tools, balancing empirical evidence and theoretical insights per subject.\n\nSEMANTIC: {phase2_triple_semantic}\nGENEALOGICAL: {phase2_triple_genealogical}\nTELEOLOGICAL: {phase2_triple_teleological}\n\nAssessment: Utility with adaptive evidence; guideline; claim; limitations.\n\nNarrative; limit ~250 words.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "pragmatics with balanced actionability",
+          "layer": "layer3",
+          "word_limit": 250
+        }
+      },
+      "tension_validator": {
+        "template": "You are a tension analyst. Identify/resolve conflicts, adapting to subject (e.g., data vs. theory clashes).\n\nSEMANTIC: {phase2_triple_semantic}\nGENEALOGICAL: {phase2_triple_genealogical}\nTELEOLOGICAL: {phase2_triple_teleological}\n\nAnalysis: 1. Conflicts; 2. Causes; 3. Resolutions; 4. Assessment.\n\nNarrative; adaptive exemplar; limit ~200 words.",
+        "placeholders": ["phase2_triple_semantic", "phase2_triple_genealogical", "phase2_triple_teleological"],
+        "metadata": {
+          "purpose": "tension resolution with balanced exemplars",
+          "layer": "layer3",
+          "word_limit": 200
+        }
+      }
+    },
+    "layer4": {
+      "synthesis_node": {
+        "template": "You are a master synthesizer. Integrate into narrative, balancing empirical data and theoretical observations per query subject.\n\nINPUTS:\nCOHERENCE: {phase3_triple_coherence}\nPRAGMATIC: {phase3_triple_pragmatic}\nTENSION: {phase3_triple_tension}\n\nREQUIREMENTS:\n1. INTEGRATE: Arc with adaptive exemplars (e.g., stats for empirical, analogies for theoretical).\n2. THESIS: Core insight.\n3. VALUE: Insights; qualifications.\n4. STRUCTURE: Flow; under 600 words; end with **Thesis:**.\n\nSYNTHESIS:",
+        "placeholders": ["phase3_triple_coherence", "phase3_triple_pragmatic", "phase3_triple_tension"],
+        "metadata": {
+          "purpose": "synthesis with balanced pluralism",
+          "layer": "layer4",
+          "word_limit": 600
+        }
+      }
+    }
+  }
+}

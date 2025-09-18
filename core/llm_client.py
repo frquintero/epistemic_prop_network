@@ -5,13 +5,11 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-import structlog
 from groq import AsyncGroq, Groq
 from pydantic import BaseModel
 
 from core.config import NetworkConfig, get_config
 from core.logging_config import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -62,7 +60,7 @@ class LLMClient:
     def __init__(
         self,
         config: Optional[LLMConfig] = None,
-        network_config: Optional[NetworkConfig] = None
+        network_config: Optional[NetworkConfig] = None,
     ):
         """Initialize the LLM client.
 
@@ -108,7 +106,7 @@ class LLMClient:
         prompt: str,
         system_message: Optional[str] = None,
         response_format: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """Generate text using the LLM.
 
@@ -133,7 +131,7 @@ class LLMClient:
             "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
             "timeout": self.config.timeout,
-            **kwargs
+            **kwargs,
         }
 
         # Conditionally add reasoning_effort if supported by the model
@@ -153,7 +151,9 @@ class LLMClient:
             params["response_format"] = response_format
 
         if self.config.mock_responses:
-            logger.debug("Returning mock LLM response             params=%s", str(params))
+            logger.debug(
+                "Returning mock LLM response             params=%s", str(params)
+            )
             return self._build_mock_text_response(prompt)
 
         for attempt in range(self.config.max_retries):
@@ -164,9 +164,13 @@ class LLMClient:
                 return self._clean_reasoning_tags(content)
 
             except Exception as e:
-                logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
+                logger.warning(
+                    "LLM request failed             attempt=%d | error=%s",
+                    attempt + 1,
+                    str(e),
+                )
                 if attempt < self.config.max_retries - 1:
-                    await asyncio.sleep(self.config.retry_delay * (2 ** attempt))
+                    await asyncio.sleep(self.config.retry_delay * (2**attempt))
                 else:
                     raise
 
@@ -177,7 +181,7 @@ class LLMClient:
         prompt: str,
         system_message: Optional[str] = None,
         response_format: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """Generate text synchronously.
 
@@ -202,7 +206,7 @@ class LLMClient:
             "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
             "timeout": self.config.timeout,
-            **kwargs
+            **kwargs,
         }
 
         # Conditionally add reasoning_effort if supported by the model
@@ -222,21 +226,31 @@ class LLMClient:
             params["response_format"] = response_format
 
         if self.config.mock_responses:
-            logger.debug("Returning mock synchronous LLM response             params=%s", str(params))
+            logger.debug(
+                "Returning mock synchronous LLM response             params=%s",
+                str(params),
+            )
             return self._build_mock_text_response(prompt)
 
         for attempt in range(self.config.max_retries):
             try:
-                logger.info("Making synchronous LLM request             attempt=%d", attempt + 1)
+                logger.info(
+                    "Making synchronous LLM request             attempt=%d", attempt + 1
+                )
                 response = self.client.chat.completions.create(**params)
                 content = response.choices[0].message.content or ""
                 return self._clean_reasoning_tags(content)
 
             except Exception as e:
-                logger.warning("LLM request failed             attempt=%d | error=%s", attempt + 1, str(e))
+                logger.warning(
+                    "LLM request failed             attempt=%d | error=%s",
+                    attempt + 1,
+                    str(e),
+                )
                 if attempt < self.config.max_retries - 1:
                     import time
-                    time.sleep(self.config.retry_delay * (2 ** attempt))
+
+                    time.sleep(self.config.retry_delay * (2**attempt))
                 else:
                     raise
 
@@ -247,7 +261,7 @@ class LLMClient:
         prompt: str,
         schema: Dict[str, Any],
         system_message: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Generate structured output using JSON Schema mode.
 
@@ -264,25 +278,30 @@ class LLMClient:
             "type": "json_schema",
             "json_schema": {
                 "name": schema.get("name", "structured_response"),
-                "schema": schema
-            }
+                "schema": schema,
+            },
         }
 
         if self.config.mock_responses:
-            logger.debug("Returning mock structured LLM response             schema=%s", str(schema))
+            logger.debug(
+                "Returning mock structured LLM response             schema=%s",
+                str(schema),
+            )
             return self._build_mock_structured_response(schema)
 
         response_text = await self.generate_text(
             prompt=prompt,
             system_message=system_message,
             response_format=response_format,
-            **kwargs
+            **kwargs,
         )
 
         try:
             return json.loads(response_text)
         except json.JSONDecodeError as e:
-            logger.error("Failed to parse structured response             error=%s", str(e))
+            logger.error(
+                "Failed to parse structured response             error=%s", str(e)
+            )
             raise ValueError(f"Invalid JSON response: {response_text}")
 
     def _build_mock_text_response(self, prompt: str) -> str:
@@ -326,7 +345,7 @@ class LLMClient:
     def _get_supported_reasoning_effort(self) -> Optional[str]:
         """Get reasoning_effort value if supported by the model, otherwise None."""
         model = self.config.model.lower()
-        
+
         # Models that support reasoning_effort with specific values
         if "gpt-oss" in model:
             # GPT-OSS models support "low", "medium", "high"
@@ -339,36 +358,38 @@ class LLMClient:
                 return "low"  # Map none to low
             else:
                 return "medium"  # Default fallback
-        
+
         # Models that don't support reasoning_effort at all
         elif "qwen" in model or "compound" in model:
             return None  # Don't include reasoning_effort parameter
-        
+
         # Default: include as-is (for future models)
         return self.config.reasoning_effort
 
     def _clean_reasoning_tags(self, content: str) -> str:
         """Clean reasoning tags from LLM response content.
-        
+
         Removes <think>...</think> tags while preserving the final answer.
         This ensures clean output even if reasoning_format parameter doesn't work.
-        
+
         Args:
             content: Raw LLM response content
-            
+
         Returns:
             Cleaned content with reasoning tags removed
         """
         import re
-        
+
         # Remove <think> tags and their content
         # Pattern matches <think> opening tag, captures everything until </think> closing tag, removes both
-        cleaned = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        
+        cleaned = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+
         # Also handle unclosed <think> tags (in case of truncation)
-        cleaned = re.sub(r'<think>.*$', '', cleaned, flags=re.DOTALL)
-        
+        cleaned = re.sub(r"<think>.*$", "", cleaned, flags=re.DOTALL)
+
         return cleaned.strip()
+
+
 # Global client instance
 _default_client: Optional[LLMClient] = None
 

@@ -54,46 +54,38 @@
       "description": "Functional analysis with tool access for real-world validation"
     },
     "layer3.coherence_validator": {
-      "model": "qwen/qwen3-32b",
+      "model": "openai/gpt-oss-120b",
       "temperature": 0.5,
       "max_tokens": 2000,
-      "reasoning_effort": "default",
-      "reasoning_format": "parsed",
-      "top_p": 0.95,
-      "top_k": 20,
-      "min_p": 0.0,
+      "reasoning_effort": "medium",
+      "top_p": 1.0,
       "timeout": 120.0,
       "max_retries": 3,
       "tool_policy": "disabled",
       "description": "Rigorous logical validation with high reasoning effort"
     },
-    "layer3.correspondence_validator": {
-      "model": "qwen/qwen3-32b",
+    "layer3.tension_validator": {
+      "model": "openai/gpt-oss-120b",
       "temperature": 0.5,
       "max_tokens": 2000,
-      "reasoning_effort": "default",
-      "reasoning_format": "parsed",
-      "top_p": 0.95,
-      "top_k": 20,
-      "min_p": 0.0,
+      "reasoning_effort": "medium",
+      "top_p": 1.0,
       "timeout": 120.0,
       "max_retries": 3,
       "tool_policy": "disabled",
-      "description": "High-accuracy validation for correspondence checking using Qwen reasoning"
+      "description": "Conflict analysis and resolution within epistemic triples"
     },
+
     "layer3.pragmatic_validator": {
-      "model": "qwen/qwen3-32b",
+      "model": "openai/gpt-oss-120b",
       "temperature": 0.5,
       "max_tokens": 2000,
-      "reasoning_effort": "default",
-      "reasoning_format": "parsed",
-      "top_p": 0.95,
-      "top_k": 20,
-      "min_p": 0.0,
+      "reasoning_effort": "medium",
+      "top_p": 1.0,
       "timeout": 120.0,
       "max_retries": 3,
       "tool_policy": "disabled",
-      "description": "Real-world validation using Qwen reasoning capabilities"
+      "description": "Real-world validation using GPT-OSS reasoning capabilities"
     },
     "layer4.synthesis_node": {
       "model": "qwen/qwen3-32b",

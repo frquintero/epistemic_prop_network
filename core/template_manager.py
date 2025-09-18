@@ -7,19 +7,20 @@ consistent prompt engineering with validation and fallback mechanisms.
 
 import json
 import os
-from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass
+from pathlib import Path
 from string import Formatter
+from typing import Any, Dict, List, Optional
 
-from core.logging_config import get_logger
 from core.exceptions import ConfigurationError
 from core.llm_client import LLMConfig
+from core.logging_config import get_logger
 
 
 @dataclass
 class TemplateMetadata:
     """Metadata for a template."""
+
     version: str
     last_updated: str
     author: str
@@ -29,6 +30,7 @@ class TemplateMetadata:
 @dataclass
 class Template:
     """Represents a single prompt template."""
+
     template: str
     placeholders: List[str]
     metadata: Optional[Dict[str, Any]] = None
@@ -41,7 +43,9 @@ class TemplateManager:
     Includes fallback mechanisms to prevent system failure.
     """
 
-    def __init__(self, template_file: Optional[str] = None, llm_config_file: Optional[str] = None):
+    def __init__(
+        self, template_file: Optional[str] = None, llm_config_file: Optional[str] = None
+    ):
         """Initialize the TemplateManager.
 
         Args:
@@ -76,67 +80,69 @@ class TemplateManager:
             if not os.path.exists(self.template_file):
                 self.logger.warning(
                     "Template file not found at %s, using fallback mode",
-                    self.template_file
+                    self.template_file,
                 )
                 self._loaded = False
                 return
 
-            with open(self.template_file, 'r', encoding='utf-8') as f:
+            with open(self.template_file, "r", encoding="utf-8") as f:
                 template_data = json.load(f)
 
             # Validate template structure
             self._validate_template_structure(template_data)
 
             # Load template metadata
-            if 'metadata' in template_data:
-                meta = template_data['metadata']
+            if "metadata" in template_data:
+                meta = template_data["metadata"]
                 self.metadata = TemplateMetadata(
-                    version=meta.get('version', '1.0.0'),
-                    last_updated=meta.get('last_updated', 'unknown'),
-                    author=meta.get('author', 'unknown'),
-                    description=meta.get('description')
+                    version=meta.get("version", "1.0.0"),
+                    last_updated=meta.get("last_updated", "unknown"),
+                    author=meta.get("author", "unknown"),
+                    description=meta.get("description"),
                 )
 
             # Load templates
             self.templates = {}
-            for layer_name, layer_templates in template_data.get('templates', {}).items():
+            for layer_name, layer_templates in template_data.get(
+                "templates", {}
+            ).items():
                 self.templates[layer_name] = {}
                 for template_name, template_data_item in layer_templates.items():
                     template = Template(
-                        template=template_data_item['template'],
-                        placeholders=template_data_item.get('placeholders', []),
-                        metadata=template_data_item.get('metadata')
+                        template=template_data_item["template"],
+                        placeholders=template_data_item.get("placeholders", []),
+                        metadata=template_data_item.get("metadata"),
                     )
                     self.templates[layer_name][template_name] = template
 
             # Load LLM configurations
             if os.path.exists(self.llm_config_file):
-                with open(self.llm_config_file, 'r', encoding='utf-8') as f:
+                with open(self.llm_config_file, "r", encoding="utf-8") as f:
                     llm_data = json.load(f)
 
                 # Load LLM metadata
-                if 'metadata' in llm_data:
-                    self.llm_metadata = llm_data['metadata']
+                if "metadata" in llm_data:
+                    self.llm_metadata = llm_data["metadata"]
 
                 # Load LLM configs
-                self.llm_configs = llm_data.get('layer_configs', {})
+                self.llm_configs = llm_data.get("layer_configs", {})
 
                 self.logger.info(
                     "Loaded LLM configs for %d layer components from %s",
                     len(self.llm_configs),
-                    self.llm_config_file
+                    self.llm_config_file,
                 )
             else:
                 self.logger.warning(
                     "LLM config file not found at %s, LLM configs will not be available",
-                    self.llm_config_file
+                    self.llm_config_file,
                 )
 
             self._loaded = True
             self.logger.info(
                 "Loaded %d templates from %s",
                 sum(len(layer) for layer in self.templates.values()),
-                self.template_file
+                self.template_file,
             )
 
         except Exception as e:
@@ -149,10 +155,10 @@ class TemplateManager:
         if not isinstance(data, dict):
             raise ConfigurationError("Template file must contain a JSON object")
 
-        if 'templates' not in data:
+        if "templates" not in data:
             raise ConfigurationError("Template file must contain 'templates' key")
 
-        templates = data['templates']
+        templates = data["templates"]
         if not isinstance(templates, dict):
             raise ConfigurationError("'templates' must be an object")
 
@@ -163,13 +169,19 @@ class TemplateManager:
 
             for template_name, template_data in layer_templates.items():
                 if not isinstance(template_data, dict):
-                    raise ConfigurationError(f"Template '{layer_name}.{template_name}' must be an object")
+                    raise ConfigurationError(
+                        f"Template '{layer_name}.{template_name}' must be an object"
+                    )
 
-                if 'template' not in template_data:
-                    raise ConfigurationError(f"Template '{layer_name}.{template_name}' must have 'template' field")
+                if "template" not in template_data:
+                    raise ConfigurationError(
+                        f"Template '{layer_name}.{template_name}' must have 'template' field"
+                    )
 
-                if not isinstance(template_data['template'], str):
-                    raise ConfigurationError(f"Template '{layer_name}.{template_name}.template' must be a string")
+                if not isinstance(template_data["template"], str):
+                    raise ConfigurationError(
+                        f"Template '{layer_name}.{template_name}.template' must be a string"
+                    )
 
     def get_template(self, layer: str, name: str) -> Optional[Template]:
         """Get a template by layer and name.
@@ -208,24 +220,18 @@ class TemplateManager:
                 return LLMConfig(**config_data)
             except Exception as e:
                 self.logger.warning(
-                    "Failed to create LLMConfig for %s: %s",
-                    config_key, e
+                    "Failed to create LLMConfig for %s: %s", config_key, e
                 )
                 return None
 
         # Try to get defaults if available
-        defaults = self.llm_configs.get('defaults')
+        defaults = self.llm_configs.get("defaults")
         if defaults:
             try:
-                self.logger.info(
-                    "Using default LLM config for %s",
-                    config_key
-                )
+                self.logger.info("Using default LLM config for %s", config_key)
                 return LLMConfig(**defaults)
             except Exception as e:
-                self.logger.warning(
-                    "Failed to create default LLMConfig: %s", e
-                )
+                self.logger.warning("Failed to create default LLMConfig: %s", e)
 
         self.logger.warning("No LLM config found for %s", config_key)
         return None
@@ -252,21 +258,29 @@ class TemplateManager:
             # Validate required placeholders are provided
             formatter = Formatter()
             required_placeholders = set()
-            for literal_text, field_name, format_spec, conversion in formatter.parse(template.template):
+            for literal_text, field_name, format_spec, conversion in formatter.parse(
+                template.template
+            ):
                 if field_name:
                     required_placeholders.add(field_name)
 
             missing = required_placeholders - set(kwargs.keys())
             if missing:
-                raise ConfigurationError(f"Missing required placeholders for {layer}.{name}: {missing}")
+                raise ConfigurationError(
+                    f"Missing required placeholders for {layer}.{name}: {missing}"
+                )
 
             # Render template
             return template.template.format(**kwargs)
 
         except KeyError as e:
-            raise ConfigurationError(f"Template rendering failed for {layer}.{name}: missing placeholder {e}") from e
+            raise ConfigurationError(
+                f"Template rendering failed for {layer}.{name}: missing placeholder {e}"
+            ) from e
         except ValueError as e:
-            raise ConfigurationError(f"Template rendering failed for {layer}.{name}: {e}") from e
+            raise ConfigurationError(
+                f"Template rendering failed for {layer}.{name}: {e}"
+            ) from e
 
     def is_loaded(self) -> bool:
         """Check if templates are loaded."""
@@ -278,8 +292,7 @@ class TemplateManager:
             return {}
 
         return {
-            layer: list(templates.keys())
-            for layer, templates in self.templates.items()
+            layer: list(templates.keys()) for layer, templates in self.templates.items()
         }
 
 

@@ -3,16 +3,18 @@
 Tests the Semantic, Genealogical, and Teleological nodes along with the Layer2DefinitionManager.
 """
 
-import pytest
 import asyncio
 from unittest.mock import AsyncMock
-from core.schemas import ReformulatedQuestion, Phase2Triple
+
+import pytest
+
 from core.exceptions import LayerProcessingError, LLMError
+from core.schemas import Phase2Triple, ReformulatedQuestion
 from layers.layer2_definition import (
+    GenealogicalNode,
     Layer2DefinitionManager,
     SemanticNode,
-    GenealogicalNode,
-    TeleologicalNode
+    TeleologicalNode,
 )
 
 
@@ -38,7 +40,7 @@ class TestSemanticNode:
             question="What is a mental model?",
             original_question="What are mental models?",
             context_added=["LLM handles context embedding internally"],
-            bias_removed=["LLM handles bias elimination internally"]
+            bias_removed=["LLM handles bias elimination internally"],
         )
 
     def test_initialization(self, semantic_node):
@@ -56,7 +58,7 @@ class TestSemanticNode:
         """Test successful processing of a question."""
         # Mock the _get_llm_client method to return our mock client
         semantic_node._get_llm_client = lambda: mock_llm_client
-        
+
         result = await semantic_node.process(test_question)
 
         assert isinstance(result, str)
@@ -72,7 +74,9 @@ class TestLayer2DefinitionManager:
         """Create a Layer2DefinitionManager instance with individual mocked LLM clients."""
         # Create separate mock clients for each node to avoid side_effect conflicts
         semantic_client = AsyncMock()
-        semantic_client.generate_text.return_value = "Epistemology is the study of knowledge and belief."
+        semantic_client.generate_text.return_value = (
+            "Epistemology is the study of knowledge and belief."
+        )
 
         genealogical_client = AsyncMock()
         genealogical_client.generate_text.return_value = "Epistemology originated in ancient Greek philosophy with Plato and Aristotle."
@@ -94,7 +98,7 @@ class TestLayer2DefinitionManager:
             question="What is epistemology?",
             original_question="What is epistemology?",
             context_added=["LLM handles context embedding internally"],
-            bias_removed=["LLM handles bias elimination internally"]
+            bias_removed=["LLM handles bias elimination internally"],
         )
 
     def test_initialization(self, manager):

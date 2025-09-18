@@ -7,11 +7,11 @@ epistemological rigor.
 
 import os
 import re
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from core.config import get_config, init_config, NetworkConfig
-from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
+from core.config import NetworkConfig, get_config, init_config
+from core.exceptions import ConfigurationError, LayerProcessingError, LLMError
 from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import Phase3Triple, SynthesisOutput
@@ -26,7 +26,11 @@ class SynthesisNode:
     culminating in a thesis statement.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        network_config: Optional[NetworkConfig] = None,
+        llm_config: Optional[LLMConfig] = None,
+    ):
         """Initialize the Synthesis Node agent.
 
         Args:
@@ -48,17 +52,21 @@ class SynthesisNode:
             except RuntimeError as exc:
                 # Attempt to initialize configuration lazily using environment defaults
                 fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
-                init_config(NetworkConfig(
-                    groq_api_key=fallback_key,
-                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
-                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "1")),
-                    temperature=0.3,  # Lower temperature for consistent synthesis
-                    max_tokens_per_request=4096,  # Higher token limit for comprehensive synthesis
-                    reasoning_effort="medium",
-                    enable_structured_logging=True,
-                    debug_mode=False,
-                    mock_responses=False
-                ))
+                init_config(
+                    NetworkConfig(
+                        groq_api_key=fallback_key,
+                        groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                        max_concurrent_requests=int(
+                            os.getenv("MAX_CONCURRENT_REQUESTS", "1")
+                        ),
+                        temperature=0.3,  # Lower temperature for consistent synthesis
+                        max_tokens_per_request=4096,  # Higher token limit for comprehensive synthesis
+                        reasoning_effort="medium",
+                        enable_structured_logging=True,
+                        debug_mode=False,
+                        mock_responses=False,
+                    )
+                )
                 self._config = get_config()
         return self._config
 
@@ -84,9 +92,9 @@ class SynthesisNode:
         return template_manager.render_template(
             layer="layer4",
             name="synthesis_node",
-            phase3_triple_correspondence=phase3_triple.correspondence,
             phase3_triple_coherence=phase3_triple.coherence,
-            phase3_triple_pragmatic=phase3_triple.pragmatic
+            phase3_triple_pragmatic=phase3_triple.pragmatic,
+            phase3_triple_tension=phase3_triple.tension,
         )
 
     async def process(self, phase3_triple: Phase3Triple) -> SynthesisOutput:
@@ -109,8 +117,7 @@ class SynthesisNode:
 
             # Get LLM response
             raw_response = await self._get_llm_client().generate_text(
-                prompt=prompt,
-                max_tokens=self.config.max_tokens_per_request
+                prompt=prompt, max_tokens=self.config.max_tokens_per_request
             )
 
             # Return raw synthesis output as originally planned
@@ -118,7 +125,7 @@ class SynthesisNode:
 
             self.logger.info(
                 "Epistemological synthesis completed | raw_response_length=%d",
-                len(synthesis_output.raw_response)
+                len(synthesis_output.raw_response),
             )
 
             return synthesis_output

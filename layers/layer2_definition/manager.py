@@ -6,17 +6,17 @@ parallel processing of the three definition nodes (Semantic, Genealogical, Teleo
 
 import asyncio
 import os
-from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
 
-from core.config import get_config, init_config, NetworkConfig
-from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
+from core.config import NetworkConfig, get_config, init_config
+from core.exceptions import ConfigurationError, LayerProcessingError, LLMError
 from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
-from core.schemas import ReformulatedQuestion, Phase2Triple
+from core.schemas import Phase2Triple, ReformulatedQuestion
 
-from .semantic_node import SemanticNode
 from .genealogical_node import GenealogicalNode
+from .semantic_node import SemanticNode
 from .teleological_node import TeleologicalNode
 
 
@@ -27,7 +27,11 @@ class Layer2DefinitionManager:
     to generate comprehensive conceptual definitions.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_configs: Optional[Dict[str, LLMConfig]] = None):
+    def __init__(
+        self,
+        network_config: Optional[NetworkConfig] = None,
+        llm_configs: Optional[Dict[str, LLMConfig]] = None,
+    ):
         """Initialize the Layer 2 Definition Manager.
 
         Args:
@@ -41,16 +45,15 @@ class Layer2DefinitionManager:
 
         # Initialize the three definition nodes
         self.semantic_node = SemanticNode(
-            network_config=self.config,
-            llm_config=self.llm_configs.get('semantic_node')
+            network_config=self.config, llm_config=self.llm_configs.get("semantic_node")
         )
         self.genealogical_node = GenealogicalNode(
             network_config=self.config,
-            llm_config=self.llm_configs.get('genealogical_node')
+            llm_config=self.llm_configs.get("genealogical_node"),
         )
         self.teleological_node = TeleologicalNode(
             network_config=self.config,
-            llm_config=self.llm_configs.get('teleological_node')
+            llm_config=self.llm_configs.get("teleological_node"),
         )
 
     @property
@@ -62,21 +65,27 @@ class Layer2DefinitionManager:
             except RuntimeError as exc:
                 # Attempt to initialize configuration lazily using environment defaults
                 fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
-                init_config(NetworkConfig(
-                    groq_api_key=fallback_key,
-                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
-                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "3")),  # Allow parallel execution
-                    temperature=0.4,  # Balanced temperature for definition generation
-                    max_tokens_per_request=2048,
-                    reasoning_effort="medium",
-                    enable_structured_logging=True,
-                    debug_mode=False,
-                    mock_responses=False
-                ))
+                init_config(
+                    NetworkConfig(
+                        groq_api_key=fallback_key,
+                        groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                        max_concurrent_requests=int(
+                            os.getenv("MAX_CONCURRENT_REQUESTS", "3")
+                        ),  # Allow parallel execution
+                        temperature=0.4,  # Balanced temperature for definition generation
+                        max_tokens_per_request=2048,
+                        reasoning_effort="medium",
+                        enable_structured_logging=True,
+                        debug_mode=False,
+                        mock_responses=False,
+                    )
+                )
                 self._config = get_config()
         return self._config
 
-    async def process(self, reformulated_question: ReformulatedQuestion) -> Phase2Triple:
+    async def process(
+        self, reformulated_question: ReformulatedQuestion
+    ) -> Phase2Triple:
         """Process a reformulated question through all three definition nodes in parallel.
 
         Args:
@@ -91,7 +100,11 @@ class Layer2DefinitionManager:
         try:
             self.logger.info(
                 "Starting Layer 2 Definition Generation | question=%s",
-                reformulated_question.question[:100] + "..." if len(reformulated_question.question) > 100 else reformulated_question.question
+                (
+                    reformulated_question.question[:100] + "..."
+                    if len(reformulated_question.question) > 100
+                    else reformulated_question.question
+                ),
             )
 
             start_time = datetime.now()
@@ -106,17 +119,19 @@ class Layer2DefinitionManager:
                 semantic_task,
                 genealogical_task,
                 teleological_task,
-                return_exceptions=True
+                return_exceptions=True,
             )
 
             # Handle results and exceptions
-            semantic_result, genealogical_result, teleological_result = self._handle_parallel_results(results)
+            semantic_result, genealogical_result, teleological_result = (
+                self._handle_parallel_results(results)
+            )
 
             # Create Phase2Triple output
             phase2_output = Phase2Triple(
                 semantic=semantic_result,
                 genealogical=genealogical_result,
-                teleological=teleological_result
+                teleological=teleological_result,
             )
 
             processing_time = (datetime.now() - start_time).total_seconds()
@@ -126,19 +141,18 @@ class Layer2DefinitionManager:
                 processing_time,
                 len(semantic_result),
                 len(genealogical_result),
-                len(teleological_result)
+                len(teleological_result),
             )
 
             return phase2_output
 
         except Exception as e:
-            self.logger.error(
-                "Layer 2 Definition Generation failed | error=%s",
-                e
-            )
+            self.logger.error("Layer 2 Definition Generation failed | error=%s", e)
             raise LayerProcessingError(f"Definition generation failed: {e}") from e
 
-    def _handle_parallel_results(self, results: Tuple[Any, ...]) -> Tuple[str, str, str]:
+    def _handle_parallel_results(
+        self, results: Tuple[Any, ...]
+    ) -> Tuple[str, str, str]:
         """Handle results from parallel node execution, including error handling.
 
         Args:
@@ -157,23 +171,36 @@ class Layer2DefinitionManager:
             self.logger.warning("Semantic node failed | error=%s", semantic_result)
             semantic_result = self._generate_fallback_semantic()
         elif not isinstance(semantic_result, str) or len(semantic_result) < 50:
-            self.logger.warning("Semantic node returned inadequate result | length=%d", len(semantic_result) if isinstance(semantic_result, str) else 0)
+            self.logger.warning(
+                "Semantic node returned inadequate result | length=%d",
+                len(semantic_result) if isinstance(semantic_result, str) else 0,
+            )
             semantic_result = self._generate_fallback_semantic()
 
         # Handle genealogical node result
         if isinstance(genealogical_result, Exception):
-            self.logger.warning("Genealogical node failed | error=%s", genealogical_result)
+            self.logger.warning(
+                "Genealogical node failed | error=%s", genealogical_result
+            )
             genealogical_result = self._generate_fallback_genealogical()
         elif not isinstance(genealogical_result, str) or len(genealogical_result) < 100:
-            self.logger.warning("Genealogical node returned inadequate result | length=%d", len(genealogical_result) if isinstance(genealogical_result, str) else 0)
+            self.logger.warning(
+                "Genealogical node returned inadequate result | length=%d",
+                len(genealogical_result) if isinstance(genealogical_result, str) else 0,
+            )
             genealogical_result = self._generate_fallback_genealogical()
 
         # Handle teleological node result
         if isinstance(teleological_result, Exception):
-            self.logger.warning("Teleological node failed | error=%s", teleological_result)
+            self.logger.warning(
+                "Teleological node failed | error=%s", teleological_result
+            )
             teleological_result = self._generate_fallback_teleological()
         elif not isinstance(teleological_result, str) or len(teleological_result) < 100:
-            self.logger.warning("Teleological node returned inadequate result | length=%d", len(teleological_result) if isinstance(teleological_result, str) else 0)
+            self.logger.warning(
+                "Teleological node returned inadequate result | length=%d",
+                len(teleological_result) if isinstance(teleological_result, str) else 0,
+            )
             teleological_result = self._generate_fallback_teleological()
 
         return semantic_result, genealogical_result, teleological_result
@@ -201,7 +228,7 @@ class Layer2DefinitionManager:
                 question="What is epistemology?",
                 original_question="What is epistemology?",
                 context_added=["LLM handles context embedding internally"],
-                bias_removed=["LLM handles bias elimination internally"]
+                bias_removed=["LLM handles bias elimination internally"],
             )
 
             # Test all three nodes
@@ -209,11 +236,15 @@ class Layer2DefinitionManager:
                 self.semantic_node.health_check(),
                 self.genealogical_node.health_check(),
                 self.teleological_node.health_check(),
-                return_exceptions=True
+                return_exceptions=True,
             )
 
             # Check if all nodes are healthy
-            healthy_nodes = sum(1 for result in results if result is True and not isinstance(result, Exception))
+            healthy_nodes = sum(
+                1
+                for result in results
+                if result is True and not isinstance(result, Exception)
+            )
 
             self.logger.info("Layer 2 health check | healthy_nodes=%d/3", healthy_nodes)
 

@@ -8,25 +8,23 @@ The Epistemological Propagation Network employs specialized agents operating seq
 
 1. **Reformulator** ✅ – Purifies and contextualizes raw user input
 2. **Definition Generation** ✅ – Produces semantic, genealogical, and teleological definitions in parallel
-3. **Validation** ✅ – Tests correspondence, coherence, and pragmatic soundness of generated definitions
-4. **Synthesis** 🚧 – Integrates validated insights into a cohesive narrative output
+3. **Validation** ✅ – Tests correspondence, coherence, pragmatic utility, and cross-perspective tensions
+4. **Synthesis** ✅ – Integrates validated insights into a cohesive narrative output
 
 ## Current Implementation Status
 
 ### ✅ Completed Layers
 - **Layer 1**: Input purification and context establishment (Reformulator)
 - **Layer 2**: Multi-perspective definition generation (Semantic, Genealogical, Teleological nodes)
-- **Layer 3**: Multi-dimensional validation (Correspondence, Coherence, Pragmatic validators)
-
-### 🚧 In Development
-- **Layer 4**: Knowledge synthesis and narrative construction
+- **Layer 3**: Multi-dimensional validation (Correspondence, Coherence, Pragmatic, Tension validators)
+- **Layer 4**: Knowledge synthesis and narrative construction (Synthesis Node & manager)
 
 ## Architecture
 
 ### Layer Structure
 - **Layer 1**: Input purification and epistemological framing
 - **Layer 2**: Parallel definition generation (three specialized nodes)
-- **Layer 3**: Multi-dimensional validation (three validator types)
+- **Layer 3**: Multi-dimensional validation (four validator types)
 - **Layer 4**: Knowledge synthesis and narrative construction
 
 ### Data Flow
@@ -42,7 +40,8 @@ Raw Input → Layer 1 → Layer 2 (Parallel) → Layer 3 → Layer 4 → Final O
 - **Structured Output**: Pydantic-based data contracts between layers
 - **Async Processing**: High-performance concurrent operations
 - **Robust Error Handling**: Comprehensive exception handling and retry logic
-- **Optimized Token Usage**: Layer 2 definitions and Layer 3 validations stay within ~150 words for downstream efficiency
+- **Optimized Token Usage**: Layer 2 definitions and Layer 3 validations stay within ~150 words; Layer 4 synthesis is capped at ~500 words for clarity
+- **Tension Resolution**: Dedicated Layer 3 validator highlights and reconciles conceptual conflicts before synthesis
 - **Clean Data Flow**: No cross-layer payload contamination
 
 ## Installation & Environment Setup
@@ -73,7 +72,7 @@ Run the full pipeline via the CLI or programmatically:
 ```bash
 # CLI entry points
 python main.py "What are mental models?"
-python cli.py --question "What is epistemology?"
+python inspect_pipeline.py "What is epistemology?"
 ```
 
 ```python
@@ -123,7 +122,7 @@ epistemic-llm-network/
 ├── tests/                         # Async unit and integration tests
 ├── docs/                          # Supplemental documentation
 ├── AGENTS.md                      # Contributor guidelines
-├── main.py / cli.py / api.py      # Entry points
+├── main.py / inspect_pipeline.py / api.py  # Entry points
 ├── pyproject.toml                 # Tooling configuration
 └── requirements.txt               # Dependencies
 ```
@@ -137,7 +136,7 @@ epistemic-llm-network/
 - `NetworkRequest`: Input data structure
 - `ReformulatedQuestion`: Layer 1 output
 - `Phase2Triple`: Layer 2 output (semantic, genealogical, teleological)
-- `Phase3Triple`: Layer 3 output (correspondence, coherence, pragmatic)
+- `Phase3Triple`: Layer 3 output (correspondence, coherence, pragmatic, tension)
 
 ### Agent Classes
 
@@ -146,7 +145,7 @@ epistemic-llm-network/
 - `GenealogicalNode`: Historical evolution analysis
 - `TeleologicalNode`: Functional utility analysis
 - `Layer2DefinitionManager`: Parallel execution coordinator
-- `CorrespondenceValidator`, `CoherenceValidator`, `PragmaticValidator`: Layer 3 validators
+- `CorrespondenceValidator`, `CoherenceValidator`, `PragmaticValidator`, `TensionValidator`: Layer 3 validators
 - `Layer3ValidationManager`: Validation orchestrator
 
 ## Development
@@ -167,7 +166,7 @@ pytest tests/test_layer3_validation.py
 ### Key Design Principles
 
 1. **Clean Data Flow**: No cross-layer payload contamination
-2. **Token Efficiency**: Enforce ~150-word limits for Layers 2–3 and cap synthesis at 800 words
+2. **Token Efficiency**: Enforce ~150-word limits for Layers 2–3 and cap synthesis at 500 words
 3. **Parallel Execution**: Concurrent LLM requests for performance
 4. **Structured Logging**: Comprehensive request/response tracking
 5. **Error Resilience**: Graceful failure handling with fallbacks

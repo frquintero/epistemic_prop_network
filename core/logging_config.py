@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 try:
-    import structlog
     STRUCTLOG_AVAILABLE = True
 except ImportError:
     STRUCTLOG_AVAILABLE = False
@@ -17,7 +16,7 @@ from .config import get_config
 def setup_logging(
     level: Optional[str] = None,
     enable_structured: Optional[bool] = None,
-    log_file: Optional[str] = None
+    log_file: Optional[str] = None,
 ) -> None:
     """Setup logging configuration for the application.
 
@@ -30,7 +29,11 @@ def setup_logging(
     try:
         config = get_config()
         level = level or config.log_level
-        enable_structured = enable_structured if enable_structured is not None else config.enable_structured_logging
+        enable_structured = (
+            enable_structured
+            if enable_structured is not None
+            else config.enable_structured_logging
+        )
     except RuntimeError:
         # Configuration not initialized, use defaults
         level = level or "INFO"
@@ -38,7 +41,9 @@ def setup_logging(
 
     # If structured logging is disabled, suppress all logging output
     if not enable_structured:
-        numeric_level = logging.CRITICAL + 1  # Higher than CRITICAL to suppress all output
+        numeric_level = (
+            logging.CRITICAL + 1
+        )  # Higher than CRITICAL to suppress all output
     else:
         # Convert string level to logging level
         numeric_level = getattr(logging, level.upper(), logging.INFO)
@@ -86,7 +91,7 @@ def _setup_structlog(handlers: list, level: int) -> None:
 
     # Configure standard logging to work with structlog
     for handler in handlers:
-        handler.setFormatter(logging.Formatter('%(message)s'))
+        handler.setFormatter(logging.Formatter("%(message)s"))
 
     # Get the root logger and configure it
     logger = logging.getLogger()
@@ -97,6 +102,7 @@ def _setup_structlog(handlers: list, level: int) -> None:
 
 def _setup_standard_logging(handlers: list, level: int) -> None:
     """Setup standard Python logging."""
+
     # Create custom formatter to match the desired style
     class CustomFormatter(logging.Formatter):
         def format(self, record):
@@ -106,8 +112,7 @@ def _setup_standard_logging(handlers: list, level: int) -> None:
             return super().format(record)
 
     formatter = CustomFormatter(
-        fmt='%(asctime)s [%(levelname)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Apply formatter to all handlers
@@ -138,6 +143,7 @@ def get_logger(name: str) -> Any:
 
     if STRUCTLOG_AVAILABLE and config and config.enable_structured_logging:
         import structlog
+
         return structlog.get_logger(name)
     return logging.getLogger(name)
 
@@ -151,7 +157,9 @@ class LoggerMixin:
         return get_logger(self.__class__.__module__ + "." + self.__class__.__name__)
 
 
-def log_function_call(func_name: str, args: Optional[Dict[str, Any]] = None, **kwargs) -> None:
+def log_function_call(
+    func_name: str, args: Optional[Dict[str, Any]] = None, **kwargs
+) -> None:
     """Log a function call with parameters.
 
     Args:
@@ -160,11 +168,7 @@ def log_function_call(func_name: str, args: Optional[Dict[str, Any]] = None, **k
         **kwargs: Additional logging context
     """
     logger = get_logger(__name__)
-    log_data = {
-        "function": func_name,
-        "args": args or {},
-        **kwargs
-    }
+    log_data = {"function": func_name, "args": args or {}, **kwargs}
 
     if STRUCTLOG_AVAILABLE and get_config().enable_structured_logging:
         logger.info("Function call", **log_data)
@@ -181,11 +185,7 @@ def log_performance(func_name: str, duration: float, **kwargs) -> None:
         **kwargs: Additional metrics
     """
     logger = get_logger(__name__)
-    log_data = {
-        "function": func_name,
-        "duration_seconds": duration,
-        **kwargs
-    }
+    log_data = {"function": func_name, "duration_seconds": duration, **kwargs}
 
     if STRUCTLOG_AVAILABLE and get_config().enable_structured_logging:
         logger.info("Performance metric", **log_data)
@@ -204,10 +204,7 @@ def log_error(error: Exception, context: Optional[Dict[str, Any]] = None) -> Non
 
     logger = get_logger(__name__)
     error_details = format_error_details(error)
-    log_data = {
-        **error_details,
-        **(context or {})
-    }
+    log_data = {**error_details, **(context or {})}
 
     if STRUCTLOG_AVAILABLE and get_config().enable_structured_logging:
         logger.error("Error occurred", **log_data)

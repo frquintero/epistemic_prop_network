@@ -7,11 +7,10 @@ epistemological clarity.
 
 import os
 import re
-from typing import Dict, Any, Optional, List
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from core.config import get_config, init_config, NetworkConfig
-from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
+from core.config import NetworkConfig, get_config, init_config
+from core.exceptions import ConfigurationError, LayerProcessingError, LLMError
 from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import NetworkRequest, ReformulatedQuestion
@@ -26,7 +25,11 @@ class Reformulator:
     without providing answers.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None, llm_config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        llm_client: Optional[LLMClient] = None,
+        llm_config: Optional[LLMConfig] = None,
+    ):
         """Initialize the Reformulator agent.
 
         Args:
@@ -44,26 +47,38 @@ class Reformulator:
         if self._config is None:
             try:
                 self._config = get_config()
-            except RuntimeError as exc:
+            except RuntimeError:
                 # Attempt to initialize configuration lazily using environment defaults
                 fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
-                init_config(NetworkConfig(
-                    groq_api_key=fallback_key,
-                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
-                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "1")),
-                    request_timeout=float(os.getenv("REQUEST_TIMEOUT", "30.0")),
-                    max_retries=int(os.getenv("MAX_RETRIES", "1")),
-                    temperature=float(os.getenv("TEMPERATURE", "0.1")),
-                    max_tokens_per_request=int(os.getenv("MAX_TOKENS_PER_REQUEST", "2048")),
-                    log_level=os.getenv("LOG_LEVEL", "DEBUG"),
-                    enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "false").lower() == "true",
-                    debug_mode=os.getenv("DEBUG_MODE", "true").lower() == "true",
-                    mock_responses=os.getenv("MOCK_RESPONSES", "true").lower() == "true"
-                ))
+                init_config(
+                    NetworkConfig(
+                        groq_api_key=fallback_key,
+                        groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                        max_concurrent_requests=int(
+                            os.getenv("MAX_CONCURRENT_REQUESTS", "1")
+                        ),
+                        request_timeout=float(os.getenv("REQUEST_TIMEOUT", "30.0")),
+                        max_retries=int(os.getenv("MAX_RETRIES", "1")),
+                        temperature=float(os.getenv("TEMPERATURE", "0.1")),
+                        max_tokens_per_request=int(
+                            os.getenv("MAX_TOKENS_PER_REQUEST", "2048")
+                        ),
+                        log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+                        enable_structured_logging=os.getenv(
+                            "STRUCTURED_LOGGING", "false"
+                        ).lower()
+                        == "true",
+                        debug_mode=os.getenv("DEBUG_MODE", "true").lower() == "true",
+                        mock_responses=os.getenv("MOCK_RESPONSES", "true").lower()
+                        == "true",
+                    )
+                )
                 try:
                     self._config = get_config()
                 except RuntimeError as inner_exc:
-                    raise ConfigurationError("Network configuration is not initialized") from inner_exc
+                    raise ConfigurationError(
+                        "Network configuration is not initialized"
+                    ) from inner_exc
         return self._config
 
     def _get_llm_client(self) -> LLMClient:
@@ -91,41 +106,43 @@ class Reformulator:
             self.logger.info(
                 "Starting reformulation | request_id=%s | original=%s",
                 request.request_id,
-                request.original_question
+                request.original_question,
             )
 
             # Basic input validation
             if not request.original_question or not request.original_question.strip():
-                raise LayerProcessingError("Question cannot be empty", {"request_id": request.request_id})
+                raise LayerProcessingError(
+                    "Question cannot be empty", {"request_id": request.request_id}
+                )
 
             if len(request.original_question.strip()) < 3:
-                raise LayerProcessingError("Question too short", {"request_id": request.request_id})
+                raise LayerProcessingError(
+                    "Question too short", {"request_id": request.request_id}
+                )
 
             # Step 1: LLM-based reformulation (handles all bias elimination internally)
-            reformulated_question, raw_llm_response, reformulation_bias_removed = await self._reformulate_with_llm(
-                request.original_question,
-                request.metadata
+            reformulated_question, raw_llm_response, reformulation_bias_removed = (
+                await self._reformulate_with_llm(
+                    request.original_question, request.metadata
+                )
             )
 
-            # Bias removal tracking comes entirely from LLM processing
-            bias_removed = reformulation_bias_removed
-
             # LLM handles all validation internally - trust the reformulated output
-            context_added = self._detect_context_markers(reformulated_question)
+            self._detect_context_markers(reformulated_question)
 
             # Create structured result
             result = ReformulatedQuestion(
                 question=reformulated_question,
                 original_question=request.original_question,
                 context_added=["LLM handles context embedding internally"],
-                bias_removed=["LLM handles bias elimination internally"]
+                bias_removed=["LLM handles bias elimination internally"],
             )
 
             self.logger.info(
                 "Reformulation completed successfully | request_id=%s | original_len=%d | reformulated_len=%d | llm_handled_all_processing=True",
                 request.request_id,
                 len(request.original_question),
-                len(reformulated_question)
+                len(reformulated_question),
             )
 
             return result
@@ -135,14 +152,19 @@ class Reformulator:
                 "Reformulation failed | request_id=%s | error=%s",
                 request.request_id,
                 e,
-                exc_info=True
+                exc_info=True,
             )
             raise LayerProcessingError(
                 f"Failed to reformulate question: {str(e)}",
-                {"request_id": request.request_id, "original_question": request.original_question}
+                {
+                    "request_id": request.request_id,
+                    "original_question": request.original_question,
+                },
             ) from e
 
-    async def _reformulate_with_llm(self, question: str, metadata: Dict[str, Any]) -> tuple[str, str, List[str]]:
+    async def _reformulate_with_llm(
+        self, question: str, metadata: Dict[str, Any]
+    ) -> tuple[str, str, List[str]]:
         """Use LLM to perform sophisticated bias elimination and reformulation.
 
         Args:
@@ -156,8 +178,7 @@ class Reformulator:
 
         try:
             raw_response = await self._get_llm_client().generate_text(
-                prompt=prompt,
-                max_tokens=self.config.max_tokens_per_request
+                prompt=prompt, max_tokens=self.config.max_tokens_per_request
             )
 
             # Extract the reformulated question from the response
@@ -172,13 +193,15 @@ class Reformulator:
         except LLMError as e:
             self.logger.warning(
                 "LLM reformulation failed, falling back to basic processing | error=%s",
-                e
+                e,
             )
             # Fallback to basic reformulation if LLM fails
             basic_result, basic_bias = self._basic_reformulation(question)
             return basic_result, "LLM_FAILED_FALLBACK_TO_BASIC", basic_bias
 
-    def _build_reformulation_prompt(self, question: str, metadata: Dict[str, Any]) -> str:
+    def _build_reformulation_prompt(
+        self, question: str, metadata: Dict[str, Any]
+    ) -> str:
         """Build the reformulation prompt for the LLM.
 
         Args:
@@ -197,7 +220,7 @@ class Reformulator:
             layer="layer1",
             name="reformulator",
             question=question,
-            context_info=context_info
+            context_info=context_info,
         )
 
     def _extract_reformulated_question(self, llm_response: str) -> str:
@@ -213,14 +236,22 @@ class Reformulator:
         response = llm_response.strip()
 
         # Remove common LLM artifacts
-        response = re.sub(r'^(Here is|The reformulated|Reformulated|Question is|The question is|The reformulated question is):\s*', '', response, flags=re.IGNORECASE)
+        response = re.sub(
+            r"^(Here is|The reformulated|Reformulated|Question is|The question is|The reformulated question is):\s*",
+            "",
+            response,
+            flags=re.IGNORECASE,
+        )
 
         # Clean up punctuation
-        response = response.strip('"\'')
+        response = response.strip("\"'")
 
         # Ensure it ends with a question mark if it looks like a question
-        if not response.endswith('?') and any(word in response.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who']):
-            response += '?'
+        if not response.endswith("?") and any(
+            word in response.lower()
+            for word in ["what", "how", "why", "when", "where", "who"]
+        ):
+            response += "?"
 
         return response
 
@@ -239,29 +270,30 @@ class Reformulator:
         # Focus on simple bias removal - let LLM handle complex restructuring
         patterns = [
             # Emotional and judgmental language
-            (r'\b(stupid|dumb|ridiculous|absurd|pathetic)\b', ''),
-            (r'\b(obviously|clearly|of course|undoubtedly)\b', ''),
-            (r'\b(I think|I believe|in my opinion|personally)\b', ''),
-            (r'\b(the best|the worst|amazing|terrible|horrible|wonderful)\b', ''),
-
+            (r"\b(stupid|dumb|ridiculous|absurd|pathetic)\b", ""),
+            (r"\b(obviously|clearly|of course|undoubtedly)\b", ""),
+            (r"\b(I think|I believe|in my opinion|personally)\b", ""),
+            (r"\b(the best|the worst|amazing|terrible|horrible|wonderful)\b", ""),
             # Remove judgmental adjectives about people/groups
-            (r'\b(incompetent|corrupt|stupid|dumb|ridiculous)\b\s+(\bpoliticians?\b|\bleaders?\b|\bgovernment\b)', r'\2'),
-
+            (
+                r"\b(incompetent|corrupt|stupid|dumb|ridiculous)\b\s+(\bpoliticians?\b|\bleaders?\b|\bgovernment\b)",
+                r"\2",
+            ),
             # Simple question transformation (very conservative)
-            (r'\bwhy are\b', 'how are'),
-            (r'\bwhy do\b', 'how do'),
-
+            (r"\bwhy are\b", "how are"),
+            (r"\bwhy do\b", "how do"),
             # Assumptive question endings
-            (r'\b(isn\'?t it|aren\'?t they|don\'?t they)\b', ''),
-
+            (r"\b(isn\'?t it|aren\'?t they|don\'?t they)\b", ""),
             # Overly casual or colloquial expressions
-            (r'\b(kinda|sorta|like you know|you see)\b', ''),
+            (r"\b(kinda|sorta|like you know|you see)\b", ""),
         ]
 
         reformulated = question
         for pattern, replacement in patterns:
             original = reformulated
-            reformulated = re.sub(pattern, replacement, reformulated, flags=re.IGNORECASE)
+            reformulated = re.sub(
+                pattern, replacement, reformulated, flags=re.IGNORECASE
+            )
             if reformulated != original:
                 # Extract the removed word for tracking
                 match = re.search(pattern, original, flags=re.IGNORECASE)
@@ -269,18 +301,25 @@ class Reformulator:
                     bias_removed.append(f"removed biased term: {match.group(0)}")
 
         # Add basic epistemic contextualization if no specific context markers exist
-        epistemic_indicators = ['definition', 'history', 'function', 'purpose', 'role', 'meaning']
+        epistemic_indicators = [
+            "definition",
+            "history",
+            "function",
+            "purpose",
+            "role",
+            "meaning",
+        ]
         lowered = reformulated.lower()
         if not any(indicator in lowered for indicator in epistemic_indicators):
-            if any(word in lowered for word in ['what is', 'what are', 'define']):
+            if any(word in lowered for word in ["what is", "what are", "define"]):
                 reformulated = f"From an epistemological perspective, {self._lowercase_first_letter(reformulated.strip())}"
                 bias_removed.append("added epistemological framing")
-            elif any(word in lowered for word in ['how', 'why']):
+            elif any(word in lowered for word in ["how", "why"]):
                 reformulated = f"From multiple disciplinary perspectives, {self._lowercase_first_letter(reformulated.strip())}"
                 bias_removed.append("added multi-perspective framing")
 
         # Clean up extra spaces
-        reformulated = re.sub(r'\s+', ' ', reformulated).strip()
+        reformulated = re.sub(r"\s+", " ", reformulated).strip()
 
         return reformulated, bias_removed
 
@@ -307,8 +346,14 @@ class Reformulator:
             ("evaluative and normative", "epistemic framing: evaluative analysis"),
             ("multiple disciplinary", "epistemic framing: multi-perspective analysis"),
             ("interdisciplinary", "epistemic framing: multi-perspective analysis"),
-            ("epistemological perspective", "epistemic framing: general epistemological"),
-            ("epistemological and interdisciplinary", "epistemic framing: general epistemological"),
+            (
+                "epistemological perspective",
+                "epistemic framing: general epistemological",
+            ),
+            (
+                "epistemological and interdisciplinary",
+                "epistemic framing: general epistemological",
+            ),
             ("in the context of", "contextual framing embedded in question"),
         ]
 

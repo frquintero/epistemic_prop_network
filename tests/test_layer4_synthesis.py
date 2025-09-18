@@ -3,15 +3,14 @@
 Tests the SynthesisNode and Layer4SynthesisManager.
 """
 
-import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch
-from core.schemas import Phase3Triple, SynthesisOutput
+
+import pytest
+
 from core.exceptions import LayerProcessingError, LLMError
-from layers.layer4_synthesis import (
-    Layer4SynthesisManager,
-    SynthesisNode
-)
+from core.schemas import Phase3Triple, SynthesisOutput
+from layers.layer4_synthesis import Layer4SynthesisManager, SynthesisNode
 
 
 class TestSynthesisNode:
@@ -37,9 +36,9 @@ Empirically, neuroscience supports that our brains form such representations, an
     def test_phase3_triple(self):
         """Create a test Phase 3 triple."""
         return Phase3Triple(
-            correspondence="The definition is empirically supported by brain imaging studies showing internal representations. The history is accurate per scientific literature.",
             coherence="The definition is logically consistent. The history coherently explains the concept's development. The function aligns with cognitive theories.",
-            pragmatic="The concept is highly useful: definitions aid in designing experiments, history helps avoid past mistakes, and functions provide frameworks for improving decision-making."
+            pragmatic="The concept is highly useful: definitions aid in designing experiments, history helps avoid past mistakes, and functions provide frameworks for improving decision-making.",
+            tension="Minor tensions between historical and functional claims are resolved through contextual differentiation across eras.",
         )
 
     def test_initialization(self, synthesis_node):
@@ -53,7 +52,9 @@ Empirically, neuroscience supports that our brains form such representations, an
         assert synthesis_node.llm_client is not None
 
     @pytest.mark.asyncio
-    async def test_process_success(self, synthesis_node, test_phase3_triple, mock_llm_client):
+    async def test_process_success(
+        self, synthesis_node, test_phase3_triple, mock_llm_client
+    ):
         """Test successful processing of a Phase 3 triple."""
         # Mock the _get_llm_client method to return our mock client
         synthesis_node._get_llm_client = lambda: mock_llm_client
@@ -82,13 +83,13 @@ Empirically, neuroscience supports that our brains form such representations, an
 
         assert isinstance(prompt, str)
         assert len(prompt) > 100
-        assert "CORRESPONDENCE VALIDATION" in prompt
         assert "COHERENCE VALIDATION" in prompt
         assert "PRAGMATIC VALIDATION" in prompt
-        assert "SYNTHESIS REQUIREMENTS" in prompt
-        assert test_phase3_triple.correspondence in prompt
+        assert "TENSION ANALYSIS" in prompt
+        assert "OUTPUT FORMAT" in prompt
         assert test_phase3_triple.coherence in prompt
         assert test_phase3_triple.pragmatic in prompt
+        assert test_phase3_triple.tension in prompt
 
     def test_extract_thesis(self, synthesis_node):
         """Test thesis extraction when explicit marker is present."""
@@ -101,7 +102,9 @@ Empirically, neuroscience supports that our brains form such representations, an
         """
 
         # Skip this test as the production code doesn't have _extract_thesis method
-        pytest.skip("Production code doesn't implement thesis extraction - test skipped")
+        pytest.skip(
+            "Production code doesn't implement thesis extraction - test skipped"
+        )
 
     def test_extract_thesis_no_marker(self, synthesis_node):
         """Test thesis extraction when no explicit marker is present."""
@@ -112,7 +115,9 @@ Empirically, neuroscience supports that our brains form such representations, an
         """
 
         # Skip this test as the production code doesn't have _extract_thesis method
-        pytest.skip("Production code doesn't implement thesis extraction - test skipped")
+        pytest.skip(
+            "Production code doesn't implement thesis extraction - test skipped"
+        )
 
     def test_extract_synthesis_output(self, synthesis_node, mock_llm_client):
         """Test extraction of synthesis output from LLM response."""
@@ -126,7 +131,9 @@ Empirically, neuroscience supports that our brains form such representations, an
         Validation shows strong empirical support."""
 
         # Skip this test as the production code doesn't have _extract_synthesis_output method
-        pytest.skip("Production code doesn't implement synthesis output extraction - test skipped")
+        pytest.skip(
+            "Production code doesn't implement synthesis output extraction - test skipped"
+        )
 
 
 class TestLayer4SynthesisManager:
@@ -143,7 +150,8 @@ class TestLayer4SynthesisManager:
         return Phase3Triple(
             correspondence="Empirical validation results here.",
             coherence="Logical consistency validation here.",
-            pragmatic="Practical utility validation here."
+            pragmatic="Practical utility validation here.",
+            tension="Tension narrative here.",
         )
 
     def test_initialization(self, manager):
@@ -159,7 +167,7 @@ class TestLayer4SynthesisManager:
             raw_response="Test thesis statement about mental models and their importance. Test definition of mental models as cognitive frameworks. Test history of mental models from Kenneth Craik to modern research. Test function of mental models in decision making and problem solving. Test validation showing empirical support and practical utility. This is a comprehensive test narrative that provides detailed information about mental models, their development, and their significance in human cognition. The narrative explores how these cognitive tools help us understand complex systems and make better decisions in various contexts."
         )
 
-        with patch.object(manager.synthesis_node, 'process', return_value=mock_output):
+        with patch.object(manager.synthesis_node, "process", return_value=mock_output):
             result = await manager.process(test_phase3_triple)
 
             assert isinstance(result, SynthesisOutput)
@@ -169,6 +177,10 @@ class TestLayer4SynthesisManager:
     @pytest.mark.asyncio
     async def test_process_error_handling(self, manager, test_phase3_triple):
         """Test error handling in the manager."""
-        with patch.object(manager.synthesis_node, 'process', side_effect=Exception("Processing failed")):
+        with patch.object(
+            manager.synthesis_node,
+            "process",
+            side_effect=Exception("Processing failed"),
+        ):
             with pytest.raises(LayerProcessingError, match="Layer 4 synthesis failed"):
                 await manager.process(test_phase3_triple)

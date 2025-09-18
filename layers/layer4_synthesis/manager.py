@@ -6,13 +6,13 @@ the final synthesis processing that integrates validated insights into holistic 
 
 import asyncio
 import os
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from core.config import get_config, init_config, NetworkConfig
-from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
-from core.logging_config import get_logger
+from core.config import NetworkConfig, get_config, init_config
+from core.exceptions import ConfigurationError, LayerProcessingError, LLMError
 from core.llm_client import LLMConfig
+from core.logging_config import get_logger
 from core.schemas import Phase3Triple, SynthesisOutput
 
 from .synthesis_node import SynthesisNode
@@ -25,7 +25,11 @@ class Layer4SynthesisManager:
     previous layers into holistic narratives with epistemological rigor.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        network_config: Optional[NetworkConfig] = None,
+        llm_config: Optional[LLMConfig] = None,
+    ):
         """Initialize the Layer 4 Synthesis Manager.
 
         Args:
@@ -38,7 +42,9 @@ class Layer4SynthesisManager:
         self._config: Optional[NetworkConfig] = None
 
         # Initialize the synthesis node
-        self.synthesis_node = SynthesisNode(network_config=self.config, llm_config=self.llm_config)
+        self.synthesis_node = SynthesisNode(
+            network_config=self.config, llm_config=self.llm_config
+        )
 
     @property
     def config(self):
@@ -49,17 +55,21 @@ class Layer4SynthesisManager:
             except RuntimeError as exc:
                 # Attempt to initialize configuration lazily using environment defaults
                 fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
-                init_config(NetworkConfig(
-                    groq_api_key=fallback_key,
-                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
-                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "1")),
-                    temperature=0.3,  # Lower temperature for consistent synthesis
-                    max_tokens_per_request=4096,  # Higher token limit for comprehensive synthesis
-                    reasoning_effort="medium",
-                    enable_structured_logging=True,
-                    debug_mode=False,
-                    mock_responses=False
-                ))
+                init_config(
+                    NetworkConfig(
+                        groq_api_key=fallback_key,
+                        groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                        max_concurrent_requests=int(
+                            os.getenv("MAX_CONCURRENT_REQUESTS", "1")
+                        ),
+                        temperature=0.3,  # Lower temperature for consistent synthesis
+                        max_tokens_per_request=4096,  # Higher token limit for comprehensive synthesis
+                        reasoning_effort="medium",
+                        enable_structured_logging=True,
+                        debug_mode=False,
+                        mock_responses=False,
+                    )
+                )
                 self._config = get_config()
         return self._config
 
@@ -87,22 +97,17 @@ class Layer4SynthesisManager:
 
             self.logger.info(
                 "Layer 4 synthesis processing completed | processing_time=%.2fs",
-                processing_time
+                processing_time,
             )
 
             return synthesis_output
 
         except Exception as e:
-            self.logger.error(
-                "Layer 4 synthesis processing failed | error=%s",
-                str(e)
-            )
+            self.logger.error("Layer 4 synthesis processing failed | error=%s", str(e))
             raise LayerProcessingError(f"Layer 4 synthesis failed: {e}") from e
 
     def _handle_processing_error(
-        self,
-        error: Exception,
-        context: str
+        self, error: Exception, context: str
     ) -> SynthesisOutput:
         """Handle processing errors with fallback synthesis output.
 
@@ -116,7 +121,7 @@ class Layer4SynthesisManager:
         self.logger.warning(
             "Synthesis processing error, generating fallback | context=%s | error=%s",
             context,
-            str(error)
+            str(error),
         )
 
         return SynthesisOutput(
@@ -125,5 +130,5 @@ class Layer4SynthesisManager:
             history="Historical component unavailable due to processing error.",
             function="Functional component unavailable due to processing error.",
             validation_qualifications="Validation component unavailable due to processing error.",
-            narrative=f"Synthesis processing encountered an error: {str(error)}. The epistemological network was unable to complete the final integration step."
+            narrative=f"Synthesis processing encountered an error: {str(error)}. The epistemological network was unable to complete the final integration step.",
         )

@@ -1,8 +1,9 @@
 """Tests for Layer 1: Reformulator Agent"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from core.schemas import NetworkRequest
 from layers.layer1_reformulation import Reformulator
@@ -23,14 +24,14 @@ class TestReformulator:
             request_id="test-123",
             original_question="What are mental models?",
             timestamp=datetime.now().isoformat(),
-            metadata={"source": "test"}
+            metadata={"source": "test"},
         )
 
     def test_reformulator_initialization(self, reformulator):
         """Test that Reformulator initializes correctly."""
         assert reformulator is not None
-        assert hasattr(reformulator, 'llm_client')
-        assert hasattr(reformulator, 'logger')
+        assert hasattr(reformulator, "llm_client")
+        assert hasattr(reformulator, "logger")
 
     def test_basic_reformulation(self, reformulator):
         """Test basic reformulation fallback."""
@@ -73,7 +74,9 @@ class TestReformulator:
         assert result == "What are mental models?"
 
     @pytest.mark.asyncio
-    async def test_process_with_mock_llm(self, async_mock_llm_client, reformulator, sample_request):
+    async def test_process_with_mock_llm(
+        self, async_mock_llm_client, reformulator, sample_request
+    ):
         """Test full processing pipeline with mocked LLM."""
         # Use the async mock LLM client from conftest.py
         reformulator_with_mock = Reformulator(async_mock_llm_client)
@@ -83,9 +86,13 @@ class TestReformulator:
 
         # Verify result
         from core.schemas import ReformulatedQuestion
+
         assert isinstance(result, ReformulatedQuestion)
         # The mock should return a proper epistemological question
-        assert "epistemological" in result.question.lower() or "conceptual definition" in result.question.lower()
+        assert (
+            "epistemological" in result.question.lower()
+            or "conceptual definition" in result.question.lower()
+        )
         # LLM handles context embedding internally
         assert "LLM handles context embedding internally" in result.context_added[0]
 
@@ -94,9 +101,7 @@ class TestReformulator:
         """Test error handling in process method."""
         # Create invalid request (missing required fields)
         invalid_request = NetworkRequest(
-            request_id="",
-            original_question="",
-            timestamp=""
+            request_id="", original_question="", timestamp=""
         )
 
         with pytest.raises(Exception):  # Should raise LayerProcessingError

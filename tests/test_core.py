@@ -1,10 +1,11 @@
 """Basic tests for core components of the Epistemological Propagation Network."""
 
 import os
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from core.config import NetworkConfig, init_config, get_config
+import pytest
+
+from core.config import NetworkConfig, get_config, init_config
 from core.exceptions import ConfigurationError, EpistemicNetworkError
 
 
@@ -17,7 +18,7 @@ class TestNetworkConfig:
             groq_api_key="test_key",
             groq_model="openai/gpt-oss-120b",
             max_concurrent_requests=2,
-            temperature=0.2
+            temperature=0.2,
         )
 
         assert config.groq_api_key == "test_key"
@@ -28,7 +29,10 @@ class TestNetworkConfig:
     def test_config_creation_without_api_key_raises_error(self):
         """Test that config creation fails without API key."""
         with patch.dict(os.environ, {"GROQ_API_KEY": ""}):
-            with pytest.raises(ValueError, match="GROQ_API_KEY must be provided either as parameter or environment variable"):
+            with pytest.raises(
+                ValueError,
+                match="GROQ_API_KEY must be provided either as parameter or environment variable",
+            ):
                 NetworkConfig(groq_api_key="")
 
     def test_config_validation_bounds(self):
@@ -68,6 +72,7 @@ class TestNetworkConfig:
         """Test that get_config raises error when not initialized."""
         # Reset global config
         import core.config
+
         core.config._config = None
 
         with pytest.raises(RuntimeError, match="Configuration not initialized"):
@@ -136,8 +141,11 @@ class TestErrorHandlingUtilities:
     def test_get_error_category(self):
         """Test error categorization."""
         from core.exceptions import (
-            LLMConnectionError, LLMQuotaError, ValidationError,
-            LayerError, ConfigurationError
+            ConfigurationError,
+            LayerError,
+            LLMConnectionError,
+            LLMQuotaError,
+            ValidationError,
         )
 
         assert get_error_category(LLMConnectionError("test")) == "llm_connection"
@@ -149,4 +157,4 @@ class TestErrorHandlingUtilities:
 
 
 # Import the utility functions for testing
-from core.exceptions import format_error_details, is_retryable_error, get_error_category
+from core.exceptions import format_error_details, get_error_category, is_retryable_error

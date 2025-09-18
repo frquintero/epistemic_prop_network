@@ -2,6 +2,7 @@
 """Test script to verify Qwen3 reasoning format behavior with Groq API."""
 
 import os
+
 from groq import Groq
 
 # Load API key from environment
@@ -12,11 +13,12 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
+
 def test_reasoning_format(reasoning_format, description):
     """Test a specific reasoning format."""
     print(f"\n{'='*60}")
     print(f"Testing reasoning_format='{reasoning_format}' - {description}")
-    print('='*60)
+    print("=" * 60)
 
     try:
         completion = client.chat.completions.create(
@@ -24,10 +26,12 @@ def test_reasoning_format(reasoning_format, description):
             messages=[
                 {
                     "role": "user",
-                    "content": "Explain why fast inference is critical for reasoning models"
+                    "content": "Explain why fast inference is critical for reasoning models",
                 }
             ],
-            reasoning_format=reasoning_format if reasoning_format != "default" else None,
+            reasoning_format=(
+                reasoning_format if reasoning_format != "default" else None
+            ),
             temperature=0.6,
             max_tokens=1000,
             reasoning_effort="default",
@@ -40,26 +44,35 @@ def test_reasoning_format(reasoning_format, description):
 
         print("📝 RESPONSE CONTENT:")
         print("-" * 40)
-        print(response.content[:500] + "..." if len(response.content) > 500 else response.content)
+        print(
+            response.content[:500] + "..."
+            if len(response.content) > 500
+            else response.content
+        )
         print("-" * 40)
 
         # Check for reasoning field
-        if hasattr(response, 'reasoning') and response.reasoning:
+        if hasattr(response, "reasoning") and response.reasoning:
             print("🧠 REASONING FIELD:")
             print("-" * 40)
-            print(response.reasoning[:500] + "..." if len(response.reasoning) > 500 else response.reasoning)
+            print(
+                response.reasoning[:500] + "..."
+                if len(response.reasoning) > 500
+                else response.reasoning
+            )
             print("-" * 40)
         else:
             print("🧠 REASONING FIELD: None or empty")
 
         # Check for <think> tags in content
-        if response.content and '<think>' in response.content:
+        if response.content and "<think>" in response.content:
             print("⚠️  WARNING: <think> tags found in content!")
         else:
             print("✅ No <think> tags in content")
 
     except Exception as e:
         print(f"❌ Error: {e}")
+
 
 def main():
     """Run all reasoning format tests."""
@@ -80,7 +93,8 @@ def main():
 
     print(f"\n{'='*60}")
     print("✅ Testing complete")
-    print('='*60)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

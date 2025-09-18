@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from typing import AsyncGenerator, Dict, Any
+from typing import Any, AsyncGenerator, Dict
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -48,7 +48,7 @@ def mock_llm_response() -> Dict[str, Any]:
     return {
         "semantic": "A mental model is an internal representation of external reality.",
         "genealogical": "The concept originated with Kenneth Craik in 1943.",
-        "teleological": "Mental models help individuals understand and predict complex systems."
+        "teleological": "Mental models help individuals understand and predict complex systems.",
     }
 
 
@@ -58,7 +58,7 @@ def mock_validation_response() -> Dict[str, Any]:
     return {
         "correspondence": "This definition aligns with empirical studies on cognitive representations.",
         "coherence": "The definition is logically consistent with established theories.",
-        "pragmatic": "This concept has practical applications in decision-making and problem-solving."
+        "pragmatic": "This concept has practical applications in decision-making and problem-solving.",
     }
 
 
@@ -67,7 +67,7 @@ def mock_network_request() -> Dict[str, Any]:
     """Mock network request for testing."""
     return {
         "question": "What are mental models?",
-        "context": "Epistemological inquiry into cognitive frameworks"
+        "context": "Epistemological inquiry into cognitive frameworks",
     }
 
 
@@ -114,7 +114,7 @@ class MockLLMClient:
         """Mock synchronous generate_text method."""
         self.call_count += 1
         self.last_call_args = {"prompt": prompt, **kwargs}
-        
+
         # Return mock response based on prompt content
         if "semantic" in prompt.lower():
             return self.responses.get("semantic", "Mock semantic response")
@@ -188,7 +188,9 @@ class AsyncMockLLMClient:
                     return "What is the conceptual definition and functional role of mental models in cognitive processes, from an epistemological and psychological perspective?"
             return "Mock async LLM response"
 
-    async def generate_structured_output(self, prompt: str, schema: Any, **kwargs) -> Dict[str, Any]:
+    async def generate_structured_output(
+        self, prompt: str, schema: Any, **kwargs
+    ) -> Dict[str, Any]:
         """Async mock generate_structured_output method."""
         await asyncio.sleep(0.01)  # Simulate async operation
         self.call_count += 1
@@ -211,7 +213,7 @@ def sample_prompts() -> Dict[str, str]:
         "teleological": "Explain the purpose and function of mental models.",
         "correspondence": "Validate the correspondence of mental model theories with empirical evidence.",
         "coherence": "Assess the logical coherence of mental model frameworks.",
-        "pragmatic": "Evaluate the practical utility of mental models in real-world applications."
+        "pragmatic": "Evaluate the practical utility of mental models in real-world applications.",
     }
 
 
@@ -248,13 +250,17 @@ def assert_error_logged(caplog, error_type: str, message_contains: str = None) -
 
     if message_contains:
         error_messages = [record.message for record in error_records]
-        assert any(message_contains in msg for msg in error_messages), \
-            f"Error message containing '{message_contains}' not found in: {error_messages}"
+        assert any(
+            message_contains in msg for msg in error_messages
+        ), f"Error message containing '{message_contains}' not found in: {error_messages}"
 
 
-async def wait_for_condition(condition_func, timeout: float = 5.0, interval: float = 0.1):
+async def wait_for_condition(
+    condition_func, timeout: float = 5.0, interval: float = 0.1
+):
     """Wait for a condition to become true."""
     import time
+
     start_time = time.time()
 
     while time.time() - start_time < timeout:
@@ -284,10 +290,17 @@ def set_test_env_vars():
 def clear_test_env_vars():
     """Clear test environment variables."""
     test_vars = [
-        "GROQ_API_KEY", "GROQ_MODEL", "MAX_CONCURRENT_REQUESTS",
-        "REQUEST_TIMEOUT", "MAX_RETRIES", "TEMPERATURE",
-        "MAX_TOKENS_PER_REQUEST", "LOG_LEVEL", "STRUCTURED_LOGGING",
-        "DEBUG_MODE", "MOCK_RESPONSES"
+        "GROQ_API_KEY",
+        "GROQ_MODEL",
+        "MAX_CONCURRENT_REQUESTS",
+        "REQUEST_TIMEOUT",
+        "MAX_RETRIES",
+        "TEMPERATURE",
+        "MAX_TOKENS_PER_REQUEST",
+        "LOG_LEVEL",
+        "STRUCTURED_LOGGING",
+        "DEBUG_MODE",
+        "MOCK_RESPONSES",
     ]
 
     for var in test_vars:

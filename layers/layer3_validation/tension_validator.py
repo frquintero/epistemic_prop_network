@@ -1,27 +1,25 @@
-"""Coherence Validator for Layer 3 - Ensures logical consistency."""
+"""Tension Validator for Layer 3 - Resolves conflicts across analyses."""
 
-import asyncio
-import logging
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from core.config import get_config
 from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
-from core.schemas import Phase2Triple, Phase3Triple
+from core.schemas import Phase2Triple
 from core.template_manager import get_template_manager
 
 logger = None
 
 
-class CoherenceValidator:
-    """Validates logical consistency and internal coherence of outputs."""
+class TensionValidator:
+    """Identifies and reconciles tensions across semantic, genealogical, and teleological outputs."""
 
     def __init__(
         self,
         llm_client: Optional[LLMClient] = None,
         llm_config: Optional[LLMConfig] = None,
     ):
-        """Initialize the Coherence Validator.
+        """Initialize the Tension Validator.
 
         Args:
             llm_client: Optional LLM client instance. If None, creates a new one.
@@ -33,23 +31,25 @@ class CoherenceValidator:
             self.llm_client = LLMClient(config=llm_config)
         else:
             self.llm_client = LLMClient()
+
         self.config = get_config()
 
     async def process(self, phase2_triple: Phase2Triple) -> str:
-        """Process Phase 2 triple and validate logical coherence.
+        """Process Phase 2 triple and surface conceptual tensions.
 
         Args:
             phase2_triple: The triple containing semantic, genealogical, and teleological outputs
 
         Returns:
-            Validation narrative assessing logical consistency
+            Analytical narrative describing tensions and proposed resolutions
         """
         global logger
         if logger is None:
             logger = get_logger(__name__)
-        logger.info("Starting coherence validation")
 
-        prompt = self._build_coherence_prompt(phase2_triple)
+        logger.info("Starting tension validation")
+
+        prompt = self._build_tension_prompt(phase2_triple)
 
         try:
             response = await self.llm_client.generate_text(
@@ -58,39 +58,39 @@ class CoherenceValidator:
             )
 
             logger.info(
-                "Coherence validation completed | output_length=%d", len(response)
+                "Tension validation completed | output_length=%d", len(response)
             )
             return response
 
-        except Exception as e:
-            logger.error("Coherence validation failed | error=%s", str(e))
+        except Exception as exc:
+            logger.error("Tension validation failed | error=%s", str(exc))
             return self._get_fallback_response()
 
-    def _build_coherence_prompt(self, phase2_triple: Phase2Triple) -> str:
-        """Build the coherence validation prompt.
+    def _build_tension_prompt(self, phase2_triple: Phase2Triple) -> str:
+        """Build the tension validation prompt.
 
         Args:
-            phase2_triple: The triple to validate
+            phase2_triple: The triple to analyze for tensions
 
         Returns:
-            Formatted prompt for LLM
+            Formatted prompt for the LLM
         """
         template_manager = get_template_manager()
         return template_manager.render_template(
             layer="layer3",
-            name="coherence_validator",
+            name="tension_validator",
             phase2_triple_semantic=phase2_triple.semantic,
             phase2_triple_genealogical=phase2_triple.genealogical,
             phase2_triple_teleological=phase2_triple.teleological,
         )
 
     def _get_fallback_response(self) -> str:
-        """Provide fallback response when validation fails.
+        """Provide fallback response when tension analysis fails.
 
         Returns:
-            Generic fallback validation response
+            Generic fallback tension analysis response
         """
         return (
-            "Coherence validation encountered an error. The logical consistency of the outputs cannot be assessed at this time. "
-            "Manual review of conceptual relationships and logical coherence is recommended."
+            "Tension analysis encountered an error. The interactions between semantic, genealogical, and "
+            "teleological accounts require manual review to identify conflicts and potential resolutions."
         )

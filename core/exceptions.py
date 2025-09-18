@@ -19,66 +19,79 @@ class EpistemicNetworkError(Exception):
 
 class ConfigurationError(EpistemicNetworkError):
     """Raised when there's a configuration-related error."""
+
     pass
 
 
 class LLMError(EpistemicNetworkError):
     """Base class for LLM-related errors."""
+
     pass
 
 
 class LLMConnectionError(LLMError):
     """Raised when there's a connection error with the LLM service."""
+
     pass
 
 
 class LLMTimeoutError(LLMError):
     """Raised when an LLM request times out."""
+
     pass
 
 
 class LLMQuotaError(LLMError):
     """Raised when LLM API quota is exceeded."""
+
     pass
 
 
 class LLMInvalidResponseError(LLMError):
     """Raised when LLM returns an invalid or malformed response."""
+
     pass
 
 
 class ValidationError(EpistemicNetworkError):
     """Raised when data validation fails."""
+
     pass
 
 
 class LayerError(EpistemicNetworkError):
     """Base class for layer-specific errors."""
+
     pass
 
 
 class LayerProcessingError(LayerError):
     """Raised when a layer fails to process input."""
+
     pass
 
 
 class LayerTimeoutError(LayerError):
     """Raised when a layer processing times out."""
+
     pass
 
 
 class LayerValidationError(LayerError):
     """Raised when layer output validation fails."""
+
     pass
 
 
 class NetworkFlowError(EpistemicNetworkError):
     """Raised when there's an error in the network flow."""
+
     pass
 
 
 class SerializationError(EpistemicNetworkError):
     """Raised when there's an error serializing or deserializing data."""
+
     pass
 
 
@@ -91,15 +104,18 @@ class SchemaValidationError(ValidationError):
 
 class RetryExhaustedError(EpistemicNetworkError):
     """Raised when all retry attempts are exhausted."""
+
     pass
 
 
 class MockResponseError(EpistemicNetworkError):
     """Raised when there's an error with mock responses in development."""
+
     pass
 
 
 # Error handling utilities
+
 
 def format_error_details(error: Exception) -> Dict[str, Any]:
     """Format error details for logging and reporting.

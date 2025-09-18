@@ -6,11 +6,11 @@ the historical origin and evolution of concepts.
 
 import os
 import re
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from core.config import get_config, init_config, NetworkConfig
-from core.exceptions import LayerProcessingError, LLMError, ConfigurationError
+from core.config import NetworkConfig, get_config, init_config
+from core.exceptions import ConfigurationError, LayerProcessingError, LLMError
 from core.llm_client import LLMClient, LLMConfig
 from core.logging_config import get_logger
 from core.schemas import ReformulatedQuestion
@@ -24,7 +24,11 @@ class GenealogicalNode:
     of concepts through intellectual history.
     """
 
-    def __init__(self, network_config: Optional[NetworkConfig] = None, llm_config: Optional[LLMConfig] = None):
+    def __init__(
+        self,
+        network_config: Optional[NetworkConfig] = None,
+        llm_config: Optional[LLMConfig] = None,
+    ):
         """Initialize the Genealogical Node agent.
 
         Args:
@@ -46,17 +50,21 @@ class GenealogicalNode:
             except RuntimeError as exc:
                 # Attempt to initialize configuration lazily using environment defaults
                 fallback_key = os.getenv("GROQ_API_KEY", "test_api_key")
-                init_config(NetworkConfig(
-                    groq_api_key=fallback_key,
-                    groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
-                    max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "1")),
-                    temperature=0.4,  # Moderate temperature for historical analysis
-                    max_tokens_per_request=2048,
-                    reasoning_effort="medium",
-                    enable_structured_logging=True,
-                    debug_mode=False,
-                    mock_responses=False
-                ))
+                init_config(
+                    NetworkConfig(
+                        groq_api_key=fallback_key,
+                        groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+                        max_concurrent_requests=int(
+                            os.getenv("MAX_CONCURRENT_REQUESTS", "1")
+                        ),
+                        temperature=0.4,  # Moderate temperature for historical analysis
+                        max_tokens_per_request=2048,
+                        reasoning_effort="medium",
+                        enable_structured_logging=True,
+                        debug_mode=False,
+                        mock_responses=False,
+                    )
+                )
                 self._config = get_config()
         return self._config
 
@@ -69,11 +77,11 @@ class GenealogicalNode:
                 self.llm_client = LLMClient(network_config=self.config)
         return self.llm_client
 
-    def _build_genealogical_prompt(self, question: str) -> str:
+    def _build_genealogical_prompt(self, reformulated_question: str) -> str:
         """Build the genealogical analysis prompt for the LLM.
 
         Args:
-            question: The reformulated question to analyze
+            reformulated_question: The reformulated question to analyze
 
         Returns:
             str: Complete genealogical analysis prompt
@@ -82,7 +90,7 @@ class GenealogicalNode:
         return template_manager.render_template(
             layer="layer2",
             name="genealogical_node",
-            question=question
+            reformulated_question=reformulated_question,
         )
 
     async def process(self, reformulated_question: ReformulatedQuestion) -> str:
@@ -100,7 +108,11 @@ class GenealogicalNode:
         try:
             self.logger.info(
                 "Starting genealogical analysis | question=%s",
-                reformulated_question.question[:100] + "..." if len(reformulated_question.question) > 100 else reformulated_question.question
+                (
+                    reformulated_question.question[:100] + "..."
+                    if len(reformulated_question.question) > 100
+                    else reformulated_question.question
+                ),
             )
 
             # Build genealogical analysis prompt
@@ -108,8 +120,7 @@ class GenealogicalNode:
 
             # Get LLM response
             raw_response = await self._get_llm_client().generate_text(
-                prompt=prompt,
-                max_tokens=self.config.max_tokens_per_request
+                prompt=prompt, max_tokens=self.config.max_tokens_per_request
             )
 
             # Extract clean historical account
@@ -117,22 +128,16 @@ class GenealogicalNode:
 
             self.logger.info(
                 "Genealogical analysis completed | output_length=%d",
-                len(historical_account)
+                len(historical_account),
             )
 
             return historical_account
 
         except LLMError as e:
-            self.logger.warning(
-                "LLM genealogical analysis failed | error=%s",
-                e
-            )
+            self.logger.warning("LLM genealogical analysis failed | error=%s", e)
             raise LayerProcessingError(f"Genealogical analysis failed: {e}") from e
         except Exception as e:
-            self.logger.error(
-                "Unexpected error in genealogical analysis | error=%s",
-                e
-            )
+            self.logger.error("Unexpected error in genealogical analysis | error=%s", e)
             raise LayerProcessingError(f"Genealogical analysis failed: {e}") from e
 
     def _extract_historical_account(self, llm_response: str) -> str:
@@ -148,10 +153,15 @@ class GenealogicalNode:
         response = llm_response.strip()
 
         # Remove common LLM artifacts
-        response = re.sub(r'^(Here is|The historical|Historical|Account is|The account is):\s*', '', response, flags=re.IGNORECASE)
+        response = re.sub(
+            r"^(Here is|The historical|Historical|Account is|The account is):\s*",
+            "",
+            response,
+            flags=re.IGNORECASE,
+        )
 
         # Clean up punctuation
-        response = response.strip('"\'')
+        response = response.strip("\"'")
 
         # Ensure minimum length
         if len(response) < 100:

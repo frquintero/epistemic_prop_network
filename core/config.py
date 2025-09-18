@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,28 +14,18 @@ class NetworkConfig(BaseModel):
     # API Configuration
     groq_api_key: str = Field(..., description="Groq API key")
     groq_model: str = Field(
-        default="openai/gpt-oss-120b",
-        description="Groq model to use"
+        default="openai/gpt-oss-120b", description="Groq model to use"
     )
 
     # Performance Settings
     max_concurrent_requests: int = Field(
-        default=3,
-        description="Maximum concurrent LLM requests",
-        ge=1,
-        le=10
+        default=3, description="Maximum concurrent LLM requests", ge=1, le=10
     )
     request_timeout: float = Field(
-        default=120.0,
-        description="Request timeout in seconds",
-        ge=10.0,
-        le=300.0
+        default=120.0, description="Request timeout in seconds", ge=10.0, le=300.0
     )
     max_retries: int = Field(
-        default=3,
-        description="Maximum retry attempts for failed requests",
-        ge=0,
-        le=5
+        default=3, description="Maximum retry attempts for failed requests", ge=0, le=5
     )
 
     # Processing Settings
@@ -43,49 +33,43 @@ class NetworkConfig(BaseModel):
         default=0.9,
         description="LLM temperature for generation (0.9 for creative responses)",
         ge=0.0,
-        le=1.0
+        le=1.0,
     )
     max_tokens_per_request: int = Field(
         default=8192,
         description="Maximum tokens per LLM request (matches playground default)",
         ge=1000,
-        le=65536
+        le=65536,
     )
     top_p: float = Field(
-        default=1.0,
-        description="Top-p sampling parameter",
-        ge=0.0,
-        le=1.0
+        default=1.0, description="Top-p sampling parameter", ge=0.0, le=1.0
     )
     reasoning_effort: str = Field(
         default="medium",
         description="Reasoning effort level (low, medium, high)",
-        pattern="^(low|medium|high)$"
+        pattern="^(low|medium|high)$",
     )
     tools: list = Field(
         default_factory=list,
-        description="Tools to enable for the LLM (empty for Phase 1)"
+        description="Tools to enable for the LLM (empty for Phase 1)",
     )
 
     # Logging Configuration
     log_level: str = Field(
         default="INFO",
         description="Logging level",
-        pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"
+        pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$",
     )
     enable_structured_logging: bool = Field(
-        default=True,
-        description="Enable structured JSON logging"
+        default=True, description="Enable structured JSON logging"
     )
 
     # Development Settings
     debug_mode: bool = Field(
-        default=False,
-        description="Enable debug mode with additional logging"
+        default=False, description="Enable debug mode with additional logging"
     )
     mock_responses: bool = Field(
-        default=False,
-        description="Use mock responses for testing (development only)"
+        default=False, description="Use mock responses for testing (development only)"
     )
 
     @field_validator("groq_api_key", mode="before")
@@ -95,7 +79,9 @@ class NetworkConfig(BaseModel):
         if not v:
             v = os.getenv("GROQ_API_KEY", "")
         if not v:
-            raise ValueError("GROQ_API_KEY must be provided either as parameter or environment variable")
+            raise ValueError(
+                "GROQ_API_KEY must be provided either as parameter or environment variable"
+            )
         return v
 
     @field_validator("max_concurrent_requests", mode="before")
@@ -131,7 +117,8 @@ class NetworkConfig(BaseModel):
             reasoning_effort=os.getenv("REASONING_EFFORT", "medium"),
             tools=json.loads(os.getenv("TOOLS", "[]")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
-            enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "false").lower() == "true",
+            enable_structured_logging=os.getenv("STRUCTURED_LOGGING", "false").lower()
+            == "true",
             debug_mode=os.getenv("DEBUG_MODE", "false").lower() == "true",
             mock_responses=os.getenv("MOCK_RESPONSES", "false").lower() == "true",
         )
@@ -145,7 +132,7 @@ class NetworkConfig(BaseModel):
         if not config_file.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             config_data = json.load(f)
 
         return cls(**config_data)
@@ -155,30 +142,26 @@ class LayerConfig(BaseModel):
     """Configuration specific to individual layers."""
 
     enabled: bool = Field(default=True, description="Whether this layer is enabled")
-    timeout: Optional[float] = Field(None, description="Layer-specific timeout override")
-    max_retries: Optional[int] = Field(None, description="Layer-specific retry override")
+    timeout: Optional[float] = Field(
+        None, description="Layer-specific timeout override"
+    )
+    max_retries: Optional[int] = Field(
+        None, description="Layer-specific retry override"
+    )
     custom_prompts: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Custom prompts for this layer"
+        default_factory=dict, description="Custom prompts for this layer"
     )
 
 
 class ValidationConfig(BaseModel):
     """Configuration for validation settings."""
 
-    strict_mode: bool = Field(
-        default=True,
-        description="Enable strict validation mode"
-    )
+    strict_mode: bool = Field(default=True, description="Enable strict validation mode")
     min_score_threshold: float = Field(
-        default=0.7,
-        description="Minimum validation score threshold",
-        ge=0.0,
-        le=1.0
+        default=0.7, description="Minimum validation score threshold", ge=0.0, le=1.0
     )
     enable_partial_results: bool = Field(
-        default=True,
-        description="Allow partial results when some validations fail"
+        default=True, description="Allow partial results when some validations fail"
     )
 
 
