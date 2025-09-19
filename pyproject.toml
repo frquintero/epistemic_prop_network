@@ -27,11 +27,11 @@ dev = [
 ]
 
 [project.scripts]
-epn = "main:main"
+epn = "epn_core.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["epistemological_network*"]
+include = ["epn_core*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

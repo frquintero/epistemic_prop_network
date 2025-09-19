@@ -6,13 +6,15 @@ Activate the bundled virtual environment with `source venv/bin/activate` before 
 
 ## Project Structure & Module Organization
 
-Layered agents reside in `layers/`: reformulation lives in `layer1_reformulation/`, definition generators in `layer2_definition/`, and validators in `layer3_validation/`. Shared orchestration helpers are in `core/` and `utils/`. Entry points include `main.py` (pipeline runner), `inspect_pipeline.py` (detailed inspection tool), and `api.py` for service embedding. Documentation and design references live alongside this file and within `docs/`. Automated tests mirror the layering inside `tests/`.
+Core system modules reside in `epn_core/`: pipeline orchestration in `epn_core/core/`, configuration management in `epn_core/config/`, command-line interfaces in `epn_core/cli/`, and utilities in `epn_core/utils/`. Layered processing includes reformulation (layer1), parallel definition generation (layer2 with semantic and teleological nodes), and synthesis (layer3). Entry points include `main.py` (pipeline runner), `inspect_pipeline.py` (detailed inspection tool), `minimal_runner.py` (simple test runner), and `epn_cli.py` for CLI operations. Documentation and design references live alongside this file. Automated tests mirror the core modules inside `tests/`.
 
 ## Build, Test, and Development Commands
 
 - `pip install -r requirements.txt` – install runtime dependencies inside the activated virtual environment.
-- `python main.py "What are mental models?"` – execute the full four-layer pipeline for an ad-hoc query.
-- `python inspect_pipeline.py "What are mental models?"` – run detailed pipeline inspection with all prompts, outputs, and LLM configurations.
+- `python main.py "Why are all models wrong yet some are useful?"` – execute the full 1-2-1 pipeline for an ad-hoc query.
+- `python inspect_pipeline.py "Why are all models wrong yet some are useful?"` – run detailed pipeline inspection with all prompts, outputs, and LLM configurations.
+- `python minimal_runner.py "Why are all models wrong yet some are useful?"` – run simplified pipeline execution for testing.
+- `python epn_cli.py` – access command-line interface for configuration and management.
 - `pytest` – execute the async-aware unit and integration suite configured through `pyproject.toml`.
 
 ## Coding Style & Naming Conventions

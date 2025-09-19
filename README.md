@@ -1,190 +1,264 @@
-# Epistemological Propagation Network
+# Epistemic LLM Network (EPN)
 
-A multi-layer LLM system for rigorous epistemological inquiry, implementing a propagation architecture that fosters bias-resistant, evidence-based knowledge generation.
+A multi-layered Large Language Model pipeline for epistemological analysis and narrative synthesis. The system transforms user queries through sequential layers of reformulation, definition generation, and synthesis to produce coherent epistemological narratives.
 
-## Overview
+## 🏗️ Architecture
 
-The Epistemological Propagation Network employs specialized agents operating sequentially across four layers:
+The EPN implements a **1-2-1 layered architecture**:
 
-1. **Reformulator** ✅ – Purifies and contextualizes raw user input
-2. **Definition Generation** ✅ – Produces semantic, genealogical, and teleological definitions in parallel
-3. **Validation** ✅ – Tests correspondence, coherence, pragmatic utility, and cross-perspective tensions
-4. **Synthesis** ✅ – Integrates validated insights into a cohesive narrative output
+```
+Layer 1: Reformulation (1 node)
+├── Reformulator: Transforms biased questions into neutral, epistemologically-grounded inquiries
 
-## Current Implementation Status
+Layer 2: Definition Generation (2 nodes - parallel processing)
+├── Semantic Node: Analyzes conceptual meaning and narrative motifs
+└── Teleological Node: Explores functional purposes and historical contexts
 
-### ✅ Completed Layers
-- **Layer 1**: Input purification and context establishment (Reformulator)
-- **Layer 2**: Multi-perspective definition generation (Semantic, Genealogical, Teleological nodes)
-- **Layer 3**: Multi-dimensional validation (Correspondence, Coherence, Pragmatic, Tension validators)
-- **Layer 4**: Knowledge synthesis and narrative construction (Synthesis Node & manager)
-
-## Architecture
-
-### Layer Structure
-- **Layer 1**: Input purification and epistemological framing
-- **Layer 2**: Parallel definition generation (three specialized nodes)
-- **Layer 3**: Multi-dimensional validation (four validator types)
-- **Layer 4**: Knowledge synthesis and narrative construction
-
-### Data Flow
-
-```mermaid
-Raw Input → Layer 1 → Layer 2 (Parallel) → Layer 3 → Layer 4 → Final Output
+Layer 3: Synthesis (1 node)
+└── Synthesis Node: Combines semantic and teleological analyses into unified narratives
 ```
 
-## Features
+### Key Features
 
-- **Bias Resistance**: Multi-agent validation avoids single-perspective bias
-- **Parallel Processing**: Concurrent LLM requests for Layer 2 efficiency
-- **Structured Output**: Pydantic-based data contracts between layers
-- **Async Processing**: High-performance concurrent operations
-- **Robust Error Handling**: Comprehensive exception handling and retry logic
-- **Optimized Token Usage**: Layer 2 definitions and Layer 3 validations stay within ~150 words; Layer 4 synthesis is capped at ~500 words for clarity
-- **Tension Resolution**: Dedicated Layer 3 validator highlights and reconciles conceptual conflicts before synthesis
-- **Clean Data Flow**: No cross-layer payload contamination
+- **Modular Pipeline**: Configurable layers with automatic data flow
+- **Template-Driven**: JSON-based prompt templates for consistent LLM interactions
+- **Multi-Model Support**: Groq API integration with models like Qwen, GPT-OSS, etc.
+- **Async Processing**: Concurrent node execution within layers
+- **Validation Framework**: Comprehensive configuration and data flow validation
+- **Extensible Design**: Easy to add new layers, nodes, and templates
 
-## Installation & Environment Setup
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.13+
+- Virtual environment support
+- Groq API key
+
+### Installation
+
+1. **Clone and setup environment:**
+
+   ```bash
+   git clone <repository-url>
+   cd epistemic_LLM_network
+   source venv/bin/activate  # On Linux/Mac
+   # or venv\Scripts\activate on Windows
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure API access:**
+
+   ```bash
+   # Set your Groq API key
+   export GROQ_API_KEY="gsk_your_api_key_here"
+   ```
+
+### Basic Usage
+
+**Command Line:**
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd epistemic-llm-network
-
-# Activate the bundled virtual environment
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure Groq credentials (example)
-mkdir -p ~/.config/env.d/
-echo 'export GROQ_API_KEY=gsk_your_actual_groq_api_key_here' > ~/.config/env.d/ai.env
-source ~/.config/env.d/ai.env  # ensure the key is loaded
+python main.py "Why are all models wrong yet some are useful?"
 ```
 
-Verify the key with `echo $GROQ_API_KEY`. Keep credential files out of version control.
-
-## Usage
-
-Run the full pipeline via the CLI or programmatically:
-
-```bash
-# CLI entry points
-python main.py "What are mental models?"
-python inspect_pipeline.py "What is epistemology?"
-```
+**Python API:**
 
 ```python
-import asyncio
+from epn_core.core.pipeline import Pipeline
 
-from core.config import init_config, NetworkConfig
-from layers.layer1_reformulation.reformulator import Reformulator
-from layers.layer2_definition.manager import Layer2DefinitionManager
-from layers.layer3_validation.manager import Layer3ValidationManager
-
-async def run_pipeline(user_input: str):
-    config = init_config(NetworkConfig.from_env())
-
-    reformulator = Reformulator(config=config)
-    reformulated = await reformulator.process(user_input)
-
-    definitions_manager = Layer2DefinitionManager(config=config)
-    definitions = await definitions_manager.process(reformulated)
-
-    validation_manager = Layer3ValidationManager(config=config)
-    validations = await validation_manager.process(definitions)
-    return validations
-
-asyncio.run(run_pipeline("What are mental models?"))
+# Load and run pipeline
+pipeline = Pipeline()
+await pipeline.load_config()
+result = await pipeline.process("Why are all models wrong yet some are useful?")
+print(result)
 ```
 
-## Configuration
+**Detailed Inspection:**
 
-The system reads configuration from environment variables:
-
-- `GROQ_API_KEY`: Groq API key (required)
-- `GROQ_MODEL`: Model identifier (default: `openai/gpt-oss-120b`)
-- `MAX_CONCURRENT_REQUESTS`: Max concurrent requests (default: 3)
-- `REQUEST_TIMEOUT`: Request timeout in seconds (default: 120.0)
-- `LOG_LEVEL`: Logging verbosity (default: `INFO`)
-- `MOCK_RESPONSES`: Toggle mocked responses for tests (default: `false`)
-
-## Project Structure
-
-```
-epistemic-llm-network/
-├── core/                          # Core infrastructure (config, logging, schemas)
-├── layers/                        # Layered agents
-│   ├── layer1_reformulation/      # Layer 1 implementation
-│   ├── layer2_definition/         # Layer 2 nodes and manager
-│   └── layer3_validation/         # Layer 3 validators and manager
-├── tests/                         # Async unit and integration tests
-├── docs/                          # Supplemental documentation
-├── AGENTS.md                      # Contributor guidelines
-├── main.py / inspect_pipeline.py / api.py  # Entry points
-├── pyproject.toml                 # Tooling configuration
-└── requirements.txt               # Dependencies
+```bash
+python inspect_pipeline.py "Why are all models wrong yet some are useful?"
 ```
 
-## API Reference
+## 📋 Configuration
 
-### Core Classes
+### Layer Configuration (`epn_core/config/default_layer.json`)
 
-- `NetworkConfig`: Configuration management
-- `LLMClient`: Groq API integration with retry logic
-- `NetworkRequest`: Input data structure
-- `ReformulatedQuestion`: Layer 1 output
-- `Phase2Triple`: Layer 2 output (semantic, genealogical, teleological)
-- `Phase3Triple`: Layer 3 output (correspondence, coherence, pragmatic, tension)
+Defines the pipeline structure, node assignments, and LLM models:
 
-### Agent Classes
+```json
+{
+  "layers": [
+    {
+      "id": "layer1",
+      "name": "Input Reformulation",
+      "nodes": [
+        {
+          "id": "reformulator",
+          "template_id": "reformulator",
+          "llm_config": {
+            "model": "openai/gpt-oss-20b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 8192
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
-- `Reformulator`: Layer 1 input purification
-- `SemanticNode`: Semantic definition generation
-- `GenealogicalNode`: Historical evolution analysis
-- `TeleologicalNode`: Functional utility analysis
-- `Layer2DefinitionManager`: Parallel execution coordinator
-- `CorrespondenceValidator`, `CoherenceValidator`, `PragmaticValidator`, `TensionValidator`: Layer 3 validators
-- `Layer3ValidationManager`: Validation orchestrator
+### Template Configuration (`epn_core/config/default_template.json`)
 
-## Development
+Defines prompt templates with placeholders for dynamic content:
+
+```json
+{
+  "templates": {
+    "reformulator": {
+      "placeholders": ["question", "context_info"],
+      "content": "You are an epistemological reformulator...\n\nORIGINAL QUESTION: {question}{context_info}\n\nREFORMULATED QUESTION:"
+    }
+  }
+}
+```
+
+## 🔧 Development
+
+### Project Structure
+
+```
+epistemic_LLM_network/
+├── epn_core/                    # Core system modules
+│   ├── cli/                     # Command-line interfaces
+│   ├── config/                  # Configuration files
+│   ├── core/                    # Core pipeline logic
+│   └── utils/                   # Utilities
+├── tests/                       # Test suite
+├── main.py                      # Main entry point
+├── inspect_pipeline.py          # Detailed inspection tool
+├── minimal_runner.py            # Simple test runner
+└── requirements.txt             # Python dependencies
+```
 
 ### Testing
 
+Run the complete test suite:
+
 ```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=core --cov=layers
-
-# Run a specific test file
-pytest tests/test_layer3_validation.py
+pytest tests/
 ```
 
-### Key Design Principles
+Run specific test categories:
 
-1. **Clean Data Flow**: No cross-layer payload contamination
-2. **Token Efficiency**: Enforce ~150-word limits for Layers 2–3 and cap synthesis at 500 words
-3. **Parallel Execution**: Concurrent LLM requests for performance
-4. **Structured Logging**: Comprehensive request/response tracking
-5. **Error Resilience**: Graceful failure handling with fallbacks
+```bash
+pytest tests/test_core.py        # Core functionality
+pytest tests/test_layer2_definition.py  # Definition layer
+pytest tests/test_layer3_validation.py  # Validation layer
+```
 
-## Contributing
+### Code Quality
 
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes with tests
-4. Run `pytest` and linting tools before submission
-5. Submit a pull request detailing context and validation steps
+Format and lint code:
 
-## License
+```bash
+black .                          # Format code
+isort .                          # Sort imports
+flake8 .                         # Lint code
+mypy .                           # Type check
+```
 
-This project is licensed under the MIT License – see the `LICENSE` file for details.
+## 📚 API Reference
 
-## Acknowledgments
+### Pipeline Class
 
-- Built using Groq's GPT-OSS-120B model
-- Inspired by epistemological frameworks in cognitive science
-- Designed for rigorous, bias-resistant knowledge generation
+```python
+class Pipeline:
+    async def load_config(self, layer_file: str, template_file: str) -> None
+    async def process(self, input_data: Any) -> Any
+    def add_layer(self, layer: Layer, position: Optional[int] = None) -> None
+    def get_layer(self, layer_id: str) -> Layer
+```
+
+### Node Classes
+
+```python
+class BasicLLMNode:
+    def __init__(self, config: NodeConfig, template: Dict, llm_client: LLMClient)
+    async def process(self, input_data: Any) -> str
+```
+
+### Configuration Classes
+
+```python
+@dataclass
+class LLMConfig:
+    model: str
+    temperature: float
+    reasoning_effort: str  # 'low', 'medium', 'high'
+    max_tokens: int
+
+@dataclass
+class NodeConfig:
+    node_id: str
+    template_id: str
+    llm_config: LLMConfig
+```
+
+## 🤝 Contributing
+
+### Development Workflow
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/your-feature`
+3. **Make** your changes with tests
+4. **Run** tests: `pytest tests/`
+5. **Format** code: `black . && isort .`
+6. **Commit** changes: `git commit -m "feat: add your feature"`
+7. **Push** branch: `git push origin feature/your-feature`
+8. **Create** pull request
+
+### Guidelines
+
+- **Commits**: Use conventional commits (`feat:`, `fix:`, `docs:`, etc.)
+- **Tests**: Maintain >90% coverage, test both success and failure paths
+- **Documentation**: Update README and docstrings for API changes
+- **Code Style**: Follow PEP 8 with 88-character line limits
+- **Security**: Never commit API keys or sensitive credentials
+
+### Adding New Layers/Nodes
+
+1. **Define** template in `default_template.json`
+2. **Configure** layer in `default_layer.json`
+3. **Implement** node logic if needed
+4. **Add** tests for new functionality
+5. **Update** documentation
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [Groq API](https://groq.com/) for fast LLM inference
+- Inspired by epistemological theories and narrative analysis
+- Uses [Pydantic](https://pydantic-docs.helpmanual.io/) for data validation
+- Async processing with Python's `asyncio`
+
+## 📞 Support
+
+For questions, issues, or contributions:
+
+- **Issues**: GitHub Issues
+- **Discussions**: GitHub Discussions
+- **Email**: [your-email@example.com](mailto:your-email@example.com)
+
+---
+
+**Epistemic LLM Network** - Transforming questions into epistemological narratives through layered AI analysis.

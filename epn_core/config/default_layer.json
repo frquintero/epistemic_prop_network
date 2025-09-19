@@ -1,0 +1,77 @@
+{
+  "layers": [
+    {
+      "id": "layer1",
+      "name": "Input Reformulation",
+      "description": "Purifies and contextualizes raw user input",
+      "nodes": [
+        {
+          "id": "reformulator",
+          "name": "Reformulator",
+          "type": "reformulator",
+          "template_id": "reformulator",
+          "description": "Bias elimination and epistemic contextualization",
+          "llm_config": {
+            "model": "openai/gpt-oss-20b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 8192
+          }
+        }
+      ]
+    },
+    {
+      "id": "layer2",
+      "name": "Definition Generation",
+      "description": "Parallel generation of semantic and teleological definitions",
+      "nodes": [
+        {
+          "id": "semantic_node",
+          "name": "Semantic Node",
+          "type": "semantic",
+          "template_id": "semantic_node",
+          "description": "Linguistic structure and conceptual definitions",
+          "llm_config": {
+            "model": "qwen/qwen3-32b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 8192
+          }
+        },
+        {
+          "id": "teleological_node",
+          "name": "Teleological Node",
+          "type": "teleological",
+          "template_id": "teleological_node",
+          "description": "Functional purpose and practical applications",
+          "llm_config": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 8192
+          }
+        }
+      ]
+    },
+    {
+      "id": "layer3",
+      "name": "Synthesis",
+      "description": "Integration of definitions into cohesive narrative",
+      "nodes": [
+        {
+          "id": "synthesis_node",
+          "name": "Synthesis Node",
+          "type": "synthesis",
+          "template_id": "synthesis_node",
+          "description": "Emergent narrative alchemy and thesis formation",
+          "llm_config": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "reasoning_effort": "high",
+            "max_tokens": 4000
+          }
+        }
+      ]
+    }
+  ]
+}
