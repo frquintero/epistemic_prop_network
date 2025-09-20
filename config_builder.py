@@ -590,8 +590,12 @@ class ConfigBuilder:
             print(f"By default the builder will create new files instead of overwriting:")
             print(f"  - {candidate_layer.name}")
             print(f"  - {candidate_template.name}")
+            print()
+            print("Note: if you answer 'n' the builder will back up existing files to")
+            print("  layer.backup.<timestamp> and template.backup.<timestamp>, then write new")
+            print("  files to the canonical names 'layer.json' and 'template.json'.")
 
-            if self._confirm("Create these new files and keep existing ones untouched?"):
+            if self._confirm("Create these new files and keep existing ones untouched? (y/n)"):
                 layer_path = candidate_layer
                 template_path = candidate_template
                 print(f"✅ Will write new configs to {layer_path.name} and {template_path.name}")
