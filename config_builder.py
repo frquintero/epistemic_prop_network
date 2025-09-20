@@ -10,6 +10,8 @@ import json
 import os
 import re
 import sys
+import random
+import string
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
@@ -319,15 +321,8 @@ class ConfigBuilder:
                     except ValueError:
                         print("Please enter a valid number.")
 
-                # Max tokens
-                while True:
-                    try:
-                        max_tokens = int(input("Max tokens (1000-16000, default 8192): ") or "8192")
-                        if 1000 <= max_tokens <= 16000:
-                            break
-                        print("Max tokens must be between 1000 and 16000.")
-                    except ValueError:
-                        print("Please enter a valid number.")
+                # Max tokens: fixed default to 8192 (no interactive prompt)
+                max_tokens = 8192
 
                 node.llm_config = LLMConfig(
                     model=model,
@@ -568,12 +563,45 @@ class ConfigBuilder:
         layer_path = Path("layer.json")
         template_path = Path("template.json")
 
-        # Backup existing files
-        for path in [layer_path, template_path]:
-            if path.exists():
-                backup_path = path.with_suffix(f".backup.{int(Path.cwd().stat().st_mtime)}")
-                path.rename(backup_path)
-                print(f"📁 Backed up existing {path.name} to {backup_path.name}")
+        # If existing config files are present, offer to create new files with a random suffix
+        existing = [p for p in (layer_path, template_path) if p.exists()]
+        if existing:
+            # Generate random suffix: two digits + two uppercase letters
+            def _gen_suffix():
+                return f"{random.randint(0,99):02d}" + "".join(random.choices(string.ascii_uppercase, k=2))
+
+            # Find a non-colliding filename
+            for _ in range(10):
+                suffix = _gen_suffix()
+                candidate_layer = Path(f"layer_{suffix}.json")
+                candidate_template = Path(f"template_{suffix}.json")
+                if not candidate_layer.exists() and not candidate_template.exists():
+                    break
+            else:
+                # Fallback to timestamp-based names
+                ts = int(Path.cwd().stat().st_mtime)
+                candidate_layer = Path(f"layer_{ts}.json")
+                candidate_template = Path(f"template_{ts}.json")
+
+            print("⚠️  Existing config files detected in repository root:")
+            for p in existing:
+                print(f"  - {p.name}")
+            print()
+            print(f"By default the builder will create new files instead of overwriting:")
+            print(f"  - {candidate_layer.name}")
+            print(f"  - {candidate_template.name}")
+
+            if self._confirm("Create these new files and keep existing ones untouched?"):
+                layer_path = candidate_layer
+                template_path = candidate_template
+                print(f"✅ Will write new configs to {layer_path.name} and {template_path.name}")
+            else:
+                # User chose not to create new files; proceed with backing up existing files as before
+                for path in [layer_path, template_path]:
+                    if path.exists():
+                        backup_path = path.with_suffix(f".backup.{int(Path.cwd().stat().st_mtime)}")
+                        path.rename(backup_path)
+                        print(f"📁 Backed up existing {path.name} to {backup_path.name}")
 
         # Write new files
         with open(layer_path, 'w', encoding='utf-8') as f:
