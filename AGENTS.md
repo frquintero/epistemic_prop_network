@@ -6,24 +6,20 @@ Activate the bundled virtual environment with `source venv/bin/activate` before 
 
 ## Canonical Contract & Defaults
 
-The pipeline enforces a strict canonical contract for inter-layer data to make execution deterministic and fail-fast at load time:
-
-- **Each template must declare an `expected_output` string** that names the key the node will emit (lowercase letters, digits and underscores only, e.g. `reformulated_question`).
-- **Downstream templates must reference those exact keys** in their `input_context` placeholders (e.g. `{reformulated_question}`); placeholders that do not match any prior-layer `expected_output` (or the allowed globals `query`/`input`) will cause configuration validation to fail.
-- **Templates should include**: `template` (the full LLM prompt/task string), `placeholders` (list of placeholder names present in the template), `input_context` (string or list of strings showing which placeholders are provided at runtime), `expected_output`, and optional `instructions` (response-formatting guidance).
-
-Bundled defaults are provided under `epn_core/config/default_layer.json` and `epn_core/config/default_template.json`. By design, the system treats defaults explicitly: loading defaults will replace project-level templates unless an explicit merge is requested (see CLI docs below). This avoids accidental silent merges that can hide contract violations.
+The pipeline enforces a strict canonical contract for inter-layer data to make execution deterministic and fail-fast at load time.
 
 ## Project Structure & Module Organization
 
-Core system modules reside in `epn_core/`: pipeline orchestration in `epn_core/core/`, configuration management in `epn_core/config/`, command-line interfaces in `epn_core/cli/`, and utilities in `epn_core/utils/`. Layered processing includes reformulation (layer1), parallel definition generation (layer2 with semantic and teleological nodes), and synthesis (layer3). Entry points include `main.py` (pipeline runner), `inspect_pipeline.py` (detailed inspection tool), `minimal_runner.py` (simple test runner), and `epn_cli.py` for CLI operations. Documentation and design references live alongside this file. Automated tests mirror the core modules inside `tests/`.
+Core system modules reside in `epn_core/`: pipeline orchestration in `epn_core/core/`, configuration management in `epn_core/config/`, command-line interfaces in `epn_core/cli/`, and utilities in `epn_core/utils/`. Layered processing includes reformulation (layer1), parallel definition generation (layer2 with semantic and teleological nodes), and synthesis (layer3).
+
+Entry points include `main.py` (pipeline runner), `scripts/minimal_runner.py` (simple test runner), and `epn_cli.py` for CLI operations. Documentation and design references live alongside this file. Automated tests mirror the core modules inside `tests/`.
 
 ## Build, Test, and Development Commands
 
 - `pip install -r requirements.txt` – install runtime dependencies inside the activated virtual environment.
 - `python main.py "Why are all models wrong yet some are useful?"` – execute the full 1-2-1 pipeline for an ad-hoc query.
-- `python inspect_pipeline.py "Why are all models wrong yet some are useful?"` – run detailed pipeline inspection with all prompts, outputs, and LLM configurations.
-- `python minimal_runner.py "Why are all models wrong yet some are useful?"` – run simplified pipeline execution for testing.
+- `python scripts/minimal_runner.py "Why are all models wrong yet some are useful?"` – run simplified pipeline execution for testing.
+
 - `python epn_cli.py` – access command-line interface for configuration and management.
 - `pytest` – execute the async-aware unit and integration suite configured through `pyproject.toml`.
 
