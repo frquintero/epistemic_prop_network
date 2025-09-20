@@ -42,3 +42,17 @@ Keep commits focused with concise, Title Case subject lines (emojis optional, as
 ## Security & Configuration Tips
 
 Never commit API keys or local environment files. When writing integration tests, guard external calls behind environment checks or provide mock responses. Rotate credentials promptly if exposure is suspected.
+
+## Docs Index (brief)
+
+The repository keeps user-facing and design documentation under `docs/` (except `AGENTS.md` which stays at the project root). Below is a short index of the important Markdown files and their purpose:
+
+- `README.md` (root): Project overview and quickstart (where to run the pipeline, env setup, and test commands).
+- `docs/canonical_contract.md`: Detailed rules for template shape, placeholders, and the canonical contract enforced by the `Validator`.
+- `docs/LLM.md`: Notes on LLM usage, model choices, reasoning effort mapping, and client configuration.
+- `docs/TEST_INSTRUCTIONS.md`: Concise instructions for running and interpreting the automated tests (which tests, how to run them, and what to look for).
+- `docs/gpt-oss-120b-guide.md`: Model-specific guidance and practical tips for using large models effectively with the pipeline.
+- `docs/OOP_ARCHITECTURE.md`: High-level design notes about core classes, layering, and node responsibilities.
+- `docs/xai_integration.md`: Guidance for explainability / XAI hooks and integration tests.
+
+If you add or move documentation, please update this index so the next maintainer can find key files quickly.
