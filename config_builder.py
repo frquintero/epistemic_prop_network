@@ -72,6 +72,7 @@ class TemplateConfig:
     input_context: str = ""
     expected_output: str = ""
     instructions: List[str] = field(default_factory=list)
+    template: str = ""
 
 
 class ConfigBuilder:
@@ -388,7 +389,12 @@ class ConfigBuilder:
                 
                 if layer_idx == 0:
                     # First layer gets raw user input
-                    template.input_context = "{question}"
+                        template.input_context = "{query}"
+                        # Default template text uses the epistemic task if user did not supply a full template
+                        if not template.node_epistemic_task:
+                            template.template = "{query}"
+                        else:
+                            template.template = template.node_epistemic_task
                 else:
                     # Subsequent layers get outputs from previous layer
                     prev_layer = self.layers[layer_idx - 1]
@@ -538,13 +544,14 @@ class ConfigBuilder:
         # Generate template.json
         template_data = {"templates": {}}
         for template_id, template in self.templates.items():
-            template_dict = {
-                "node_epistemic_task": template.node_epistemic_task,
-                "input_context": template.input_context,
-                "expected_output": template.expected_output,
-                "instructions": template.instructions
-            }
-            template_data["templates"][template_id] = template_dict
+                template_dict = {
+                    "template": template.template or template.node_epistemic_task,
+                    "node_epistemic_task": template.node_epistemic_task,
+                    "input_context": template.input_context,
+                    "expected_output": template.expected_output,
+                    "instructions": template.instructions
+                }
+                template_data["templates"][template_id] = template_dict
 
         # Show preview
         print("Configuration preview:")
@@ -592,8 +599,8 @@ class ConfigBuilder:
         print("You can now run the EPN with your custom configuration:")
         print("  python epn_cli.py run \"Your question here\"")
         print()
-        print("Or inspect the pipeline:")
-        print("  python inspect_pipeline.py \"Your question here\"")
+        print("Or run the simplified runner to inspect prompts and outputs:")
+        print("  python scripts/minimal_runner.py \"Your question here\"")
 
     def _confirm(self, message: str) -> bool:
         """Get user confirmation."""

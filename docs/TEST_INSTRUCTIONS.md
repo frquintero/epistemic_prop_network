@@ -17,10 +17,10 @@ This file documents the automated tests in `tests/`, what each test verifies, ho
   - **Observations:** Ensure the `Pipeline.load_config` call is recorded and that `replace_templates` is True by default and False when `merge_defaults=True`.
 
 - **`tests/test_config_builder_pytest.py`**
-  - **Object:** Smoke-test `config_builder.py` interactive flow and ensure it writes `layer.json` and `template.json`.
+  - **Object:** Smoke-test `config_builder.py` interactive flow and ensure it writes `layer.json` and `template.json` with canonical fields (`template`, `input_context`, `expected_output`).
   - **Type:** Integration/CLI (non-network)
-  - **How it runs:** Runs `config_builder.py` in a `tmp_path` with scripted stdin inputs and asserts files are created.
-  - **Observations:** Confirm `layer.json` and `template.json` exist in the temporary directory after the script finishes.
+  - **How it runs:** Executes `config_builder.py` from the repository root with scripted stdin inputs, asserts `layer.json` and `template.json` are created, and validates that each template includes the `template` key and uses `{query}` for the first-layer `input_context`.
+  - **Observations:** The test cleans up generated `layer.json` and `template.json` after validation; backups (e.g. `layer.backup.*`) may remain and are expected when existing files were present.
 
 - **`tests/test_integration_defaults.py`**
   - **Object:** Sanity-check pipeline execution using bundled default configs.
