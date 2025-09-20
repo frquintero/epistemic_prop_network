@@ -93,7 +93,9 @@ class Layer:
             self.logger.debug(f"Processing node {node_id} sequentially")
             try:
                 output = await node.process(current_data)
-                results[node_id] = output
+                # Use expected_output name as key instead of node_id
+                expected_output = node.template['expected_output']
+                results[expected_output] = output
                 current_data = output  # Pass output to next node
             except Exception as e:
                 self.logger.error(f"Error processing node {node_id}: {e}")
@@ -132,7 +134,9 @@ class Layer:
             if isinstance(output, Exception):
                 self.logger.error(f"Node {node_id} failed with exception: {output}")
                 raise output
-            results[node_id] = output
+            # Use expected_output name as key instead of node_id
+            expected_output = self.nodes[node_id].template['expected_output']
+            results[expected_output] = output
 
         self.logger.info(f"Layer {self.config.layer_id} completed parallel processing")
         return results

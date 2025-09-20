@@ -1,7 +1,7 @@
 """Template management for the EPN pipeline."""
 
 from typing import Dict, Any, Optional
-from epn_core.core.logging_config import get_logger
+import logging
 
 
 class TemplateManager:
@@ -16,21 +16,28 @@ class TemplateManager:
         Args:
             templates: Optional dictionary of templates to load initially
         """
-        self.logger = get_logger("TemplateManager")
+        # Use stdlib logging here to avoid importing into epn_core.core
+        self.logger = logging.getLogger("TemplateManager")
+        if not self.logger.handlers:
+            self.logger.setLevel(logging.INFO)
         self.templates: Dict[str, Dict[str, Any]] = templates or {}
 
         if templates:
             self.logger.info(f"Initialized with {len(templates)} templates")
 
-    def load_templates(self, templates: Dict[str, Dict[str, Any]]) -> None:
+    def load_templates(self, templates: Dict[str, Dict[str, Any]], replace: bool = False) -> None:
         """Load templates into the manager.
 
         Args:
             templates: Dictionary mapping template IDs to template data
+            replace: If True, replace existing templates with this set. If False, merge.
         """
-        self.templates.update(templates)
-        self.logger.info(f"Loaded {len(templates)} templates, "
-                         f"total: {len(self.templates)}")
+        if replace:
+            self.templates = dict(templates)
+            self.logger.info(f"Replaced templates with {len(templates)} entries")
+        else:
+            self.templates.update(templates)
+            self.logger.info(f"Loaded {len(templates)} templates, total: {len(self.templates)}")
 
     def get_template(self, template_id: str) -> Dict[str, Any]:
         """Get a template by its ID.

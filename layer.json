@@ -1,0 +1,64 @@
+{
+  "layers": [
+    {
+      "id": "layer1",
+      "name": "Input",
+      "description": "Initial input processing and reformulation",
+      "nodes": [
+        {
+          "id": "reformulator_node",
+          "name": "reformulator node",
+          "type": "input",
+          "template_id": "reformulator_node",
+          "description": "Initial input processing and reformulation",
+          "llm_config": {
+            "model": "openai/gpt-oss-20b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 4096
+          }
+        }
+      ]
+    },
+    {
+      "id": "layer2",
+      "name": "Processing layer 2",
+      "description": "Processing layer 2",
+      "nodes": [
+        {
+          "id": "semantic_node",
+          "name": "semantic node",
+          "type": "semantic_node",
+          "template_id": "semantic_node",
+          "description": "Processing node semantic_node",
+          "llm_config": {
+            "model": "openai/gpt-oss-20b",
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 4096
+          }
+        }
+      ]
+    },
+    {
+      "id": "layer3",
+      "name": "Output",
+      "description": "Final synthesis and output generation",
+      "nodes": [
+        {
+          "id": "synthesis_node",
+          "name": "synthesis node",
+          "type": "output",
+          "template_id": "synthesis_node",
+          "description": "Final synthesis and output generation",
+          "llm_config": {
+            "model": "openai/gpt-oss-20b",
+            "temperature": 0.6,
+            "reasoning_effort": "high",
+            "max_tokens": 4096
+          }
+        }
+      ]
+    }
+  ]
+}

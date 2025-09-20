@@ -19,8 +19,8 @@ from epn_core.core.pipeline import Pipeline
 
 async def run_minimal_pipeline(query: str):
     """Run pipeline with minimal output showing only prompts and responses."""
+    # Pipeline now auto-discovers config files (layer.json/template.json at root, or defaults)
     pipeline = Pipeline()
-    pipeline.load_config("epn_core/config/default_layer.json", "epn_core/config/default_template.json")
 
     # Override the node processing to print minimal output
     from epn_core.core.nodes import BasicLLMNode

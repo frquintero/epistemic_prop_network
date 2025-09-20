@@ -1,0 +1,34 @@
+{
+  "templates": {
+    "reformulator_node": {
+      "node_epistemic_task": "You are an epistemological reformulator",
+      "template": "You are an epistemological reformulator",
+      "input_context": "{query}",
+      "expected_output": "reformulated_question",
+      "instructions": [
+        "Neutralize biases",
+        "Prime for emplotment"
+      ]
+    },
+    "semantic_node": {
+      "node_epistemic_task": "You are a semantic epistemologist analyzing meaning and intent",
+      "template": "You are a semantic epistemologist analyzing meaning and intent",
+      "input_context": "{reformulated_question}",
+      "expected_output": "semantic_analysis",
+      "instructions": [
+        "Analyze deeply",
+        "Find patterns"
+      ]
+    },
+    "synthesis_node": {
+      "node_epistemic_task": "You are a master synthesizer that weaves ideas together",
+      "template": "You are a master synthesizer that weaves ideas together",
+      "input_context": "{semantic_analysis}",
+      "expected_output": "comprehensive_synthesis",
+      "instructions": [
+        "Synthesize insights",
+        "Create coherent narrative"
+      ]
+    }
+  }
+}

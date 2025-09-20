@@ -19,13 +19,16 @@ class Pipeline:
 
     The Pipeline manages the flow of data through sequential layers, each containing
     multiple nodes that can process data in parallel or sequentially.
+
+    Configuration is automatically discovered: checks for layer.json/template.json at root,
+    falls back to default configs if not found.
     """
 
-    def __init__(self, config: Optional[PipelineConfig] = None):
-        """Initialize the pipeline.
+    def __init__(self, config: Optional[PipelineConfig] = None, skip_autoload: bool = False):
+        """Initialize the pipeline with automatic config discovery.
 
         Args:
-            config: Optional pipeline configuration. If None, must be loaded later.
+            config: Optional pipeline configuration. If None, auto-discovers config files.
         """
         self.config = config
         self.logger = get_logger("Pipeline")
@@ -40,8 +43,43 @@ class Pipeline:
 
         if config:
             self._build_from_config(config)
+        else:
+            # Auto-discover and load configuration unless caller requests skip
+            if not skip_autoload:
+                self._auto_load_config()
 
-    def load_config(self, layer_file: str, template_file: str) -> None:
+    def _auto_load_config(self) -> None:
+        """Automatically discover and load configuration files.
+
+        Checks for layer.json and template.json at project root.
+        Falls back to default configs if root files don't exist.
+        """
+        layer_file, template_file = self._discover_config_files()
+
+        try:
+            self.load_config(layer_file, template_file)
+            self.logger.info("Configuration loaded successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to load configuration: {e}")
+            raise
+
+    def _discover_config_files(self) -> tuple[str, str]:
+        """Discover configuration files with fallback to defaults.
+
+        Returns:
+            Tuple of (layer_file_path, template_file_path)
+        """
+        root_layer = Path("layer.json")
+        root_template = Path("template.json")
+
+        if root_layer.exists() and root_template.exists():
+            self.logger.info("Using custom configuration files from project root")
+            return str(root_layer), str(root_template)
+        else:
+            self.logger.info("Using default configuration files")
+            return "epn_core/config/default_layer.json", "epn_core/config/default_template.json"
+
+    def load_config(self, layer_file: str, template_file: str, replace_templates: bool = False) -> None:
         """Load pipeline configuration from JSON files.
 
         Args:
@@ -54,8 +92,8 @@ class Pipeline:
         layer_config = self.config_loader.load_layer_config(layer_file)
         template_config = self.config_loader.load_template_config(template_file)
 
-        # Load templates
-        self.template_manager.load_templates(template_config)
+        # Load templates (replace or merge)
+        self.template_manager.load_templates(template_config, replace=replace_templates)
 
         # Validate configuration
         self.validator.validate_complete_config(layer_config, self.template_manager)
@@ -166,6 +204,15 @@ class Pipeline:
             self.logger.info(f"Processing layer: {layer_id}")
 
             try:
+                # Debug: show keys in current_data passed to this layer
+                try:
+                    if isinstance(current_data, dict):
+                        self.logger.info(f"Input to layer '{layer_id}' keys: {list(current_data.keys())}")
+                    else:
+                        self.logger.info(f"Input to layer '{layer_id}' is a raw value of type {type(current_data).__name__}")
+                except Exception:
+                    pass
+
                 layer_output = await layer.process(current_data)
                 layer_outputs[layer_id] = layer_output
 
@@ -193,70 +240,59 @@ class Pipeline:
         Returns:
             Input data for the next layer as a dictionary matching next layer's template placeholders
         """
-        # Find the next layer in the pipeline order
+        # Find the next layer in the pipeline order; if this is the last layer return result
         try:
             current_index = self.layer_order.index(layer_id)
             if current_index + 1 >= len(self.layer_order):
-                # This is the last layer, return final result
                 return layer_output
             next_layer_id = self.layer_order[current_index + 1]
             next_layer = self.layers[next_layer_id]
         except (ValueError, KeyError):
-            # Fallback for unknown layers
-            return {
-                'query': original_query,
-                'input': layer_output
-            }
+            # Unknown layer ordering — return a generic input shape
+            return {'query': original_query, 'input': layer_output}
 
-        # Get the template placeholders expected by the next layer's nodes
-        next_layer_inputs = {}
+        # Prepare strict mapping: placeholders must correspond exactly to keys in layer_output
+        next_layer_inputs: Dict[str, Any] = {}
 
+        # Always allow access to the original query
+        next_layer_inputs['query'] = original_query
+
+        # Iterate nodes in the next layer and collect required placeholders
+        import re
         for node in next_layer.nodes.values():
-            # Extract placeholders from input_context instead of deprecated 'placeholders' field
             input_context = node.template.get('input_context', '')
-            node_placeholders = []
-            
+            node_placeholders: List[str] = []
+
             if isinstance(input_context, list):
-                # For synthesis node with list input_context
                 for context_item in input_context:
-                    import re
-                    found_placeholders = re.findall(r'\{(\w+)\}', context_item)
-                    node_placeholders.extend(found_placeholders)
+                    node_placeholders.extend(re.findall(r'\{([^}]+)\}', context_item))
             else:
-                # For other nodes with string input_context
-                import re
-                found_placeholders = re.findall(r'\{(\w+)\}', input_context)
-                node_placeholders.extend(found_placeholders)
+                node_placeholders.extend(re.findall(r'\{([^}]+)\}', str(input_context)))
 
-            # Map current layer outputs to next layer placeholders
             for placeholder in node_placeholders:
+                # Skip if already mapped
                 if placeholder in next_layer_inputs:
-                    continue  # Already mapped
+                    continue
 
-                # Try to find a matching output from current layer
-                if placeholder in layer_output:
-                    # Direct match (e.g., 'reformulated_question' from layer1)
+                # Allowed globals
+                if placeholder == 'query':
+                    next_layer_inputs['query'] = original_query
+                    continue
+                if placeholder == 'input':
+                    # provide the entire previous layer output under 'input'
+                    next_layer_inputs['input'] = layer_output
+                    continue
+
+                # Strict match: placeholder must be present in layer_output keys
+                if isinstance(layer_output, dict) and placeholder in layer_output:
                     next_layer_inputs[placeholder] = layer_output[placeholder]
-                elif len(layer_output) == 1:
-                    # Single output, map to any unmatched placeholder
-                    next_layer_inputs[placeholder] = list(layer_output.values())[0]
-                else:
-                    # Multiple outputs, try node-specific mapping
-                    # Look for node names that match placeholder patterns
-                    for node_id, node_output in layer_output.items():
-                        if placeholder.replace('_output', '_node') == node_id:
-                            next_layer_inputs[placeholder] = node_output
-                            break
-                        elif placeholder.replace('_output', '') in node_id:
-                            next_layer_inputs[placeholder] = node_output
-                            break
+                    continue
 
-        # If no specific mappings found, provide original query as fallback
-        if not next_layer_inputs:
-            next_layer_inputs = {
-                'query': original_query,
-                'input': layer_output
-            }
+                # If we reach here, placeholder cannot be satisfied — raise descriptive error
+                raise ValueError(
+                    f"Pipeline configuration error: placeholder '{{{placeholder}}}' required by node '{node.config.node_id}' in layer '{next_layer_id}' "
+                    f"is not present in outputs from previous layer '{layer_id}'. Available outputs: {sorted(list(layer_output.keys()))}"
+                )
 
         return next_layer_inputs
 

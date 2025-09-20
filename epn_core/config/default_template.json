@@ -1,8 +1,10 @@
 {
   "templates": {
     "reformulator": {
-      "node_epistemic_task": "You are an epistemological reformulator specializing in bias elimination, epistemic contextualization, and narrative priming. Your task is to transform biased questions into neutral, epistemologically-grounded inquiries that seed a cohesive narrative arc.",
-      "input_context": "{question}",
+      "template": "You are an epistemological reformulator specializing in bias elimination, epistemic contextualization, and narrative priming. Your task is to transform biased questions into neutral, epistemologically-grounded inquiries that seed a cohesive narrative arc. Reformulate the following question: {query}",
+      "placeholders": ["query"],
+      "metadata": {"purpose": "reformulation"},
+      "input_context": "{query}",
       "expected_output": "reformulated_question",
       "instructions": [
         "Neutralize biases and eliminate assumptions",
@@ -13,7 +15,9 @@
       ]
     },
     "semantic_node": {
-      "node_epistemic_task": "You are a semantic epistemologist. Your role is to understand the meaning and intent behind questions, not just the words themselves. Analyze language in context to figure out what someone is truly trying to communicate or deeply want to know.",
+      "template": "You are a semantic epistemologist. Your role is to understand the meaning and intent behind questions, not just the words themselves. Analyze language in context to figure out what someone is truly trying to communicate or deeply want to know. Analyze: {reformulated_question}",
+      "placeholders": ["reformulated_question"],
+      "metadata": {"purpose": "semantic"},
       "input_context": "{reformulated_question}",
       "expected_output": "semantic_analysis",
       "instructions": [
@@ -25,7 +29,9 @@
       ]
     },
     "teleological_node": {
-      "node_epistemic_task": "You are a functional epistemologist that investigates not just how things work, but why they work the way they do. Explore historical reasons, cultural contexts, scientific paradigms, and political dynamics to find the ultimate purpose or goal.",
+      "template": "You are a functional epistemologist that investigates not just how things work, but why they work the way they do. Explore historical reasons, cultural contexts, scientific paradigms, and political dynamics to find the ultimate purpose or goal. Analyze: {reformulated_question}",
+      "placeholders": ["reformulated_question"],
+      "metadata": {"purpose": "teleological"},
       "input_context": "{reformulated_question}",
       "expected_output": "teleological_analysis",
       "instructions": [
@@ -37,8 +43,10 @@
       ]
     },
     "synthesis_node": {
-      "node_epistemic_task": "You are a master synthesizer that gathers ideas from different sources, finds hidden connections between them, and weaves them together into a new, clearer, and more useful whole. You combine information to create a perspective that is greater than the sum of its parts.",
-      "input_context": ["{semantic_output}", "{teleological_output}"],
+      "template": "You are a master synthesizer that gathers ideas from different sources, finds hidden connections between them, and weaves them together into a new, clearer, and more useful whole. Combine semantic analysis: {semantic_analysis} with teleological analysis: {teleological_analysis} to produce an integrated synthesis.",
+      "placeholders": ["semantic_analysis", "teleological_analysis"],
+      "metadata": {"purpose": "synthesis"},
+      "input_context": ["{semantic_analysis}", "{teleological_analysis}"],
       "expected_output": "comprehensive_synthesis",
       "instructions": [
         "Limit ~600 words",

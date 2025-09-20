@@ -59,13 +59,23 @@ class BasicLLMNode(Node):
             # For synthesis node with list input_context
             for context_item in input_context:
                 import re
-                found_placeholders = re.findall(r'\{(\w+)\}', context_item)
+                found_placeholders = re.findall(r'\{([^}]+)\}', context_item)
                 placeholders.update(found_placeholders)
         else:
             # For other nodes with string input_context
             import re
-            found_placeholders = re.findall(r'\{(\w+)\}', input_context)
+            found_placeholders = re.findall(r'\{([^}]+)\}', input_context)
             placeholders.update(found_placeholders)
+
+        # Debug: log placeholders and incoming input_data keys
+        try:
+            self.logger.debug(f"Node {self.config.node_id} detected placeholders: {placeholders}")
+            if isinstance(input_data, dict):
+                self.logger.debug(f"Node {self.config.node_id} input_data keys: {list(input_data.keys())}")
+            else:
+                self.logger.debug(f"Node {self.config.node_id} input_data (raw): {type(input_data).__name__}")
+        except Exception:
+            pass
 
         # Handle different input types
         if isinstance(input_data, str):

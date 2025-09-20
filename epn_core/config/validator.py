@@ -3,6 +3,7 @@
 from ..core.node import PipelineConfig
 from .template_manager import TemplateManager
 from epn_core.core.logging_config import get_logger
+import re
 
 
 class Validator:
@@ -181,6 +182,73 @@ class Validator:
         self.validate_pipeline_flow(layer_config)
         self.validate_llm_configs(layer_config)
         self.validate_layer_template_compatibility(layer_config, template_manager)
+        # Validate that placeholders referenced by templates bind to prior-layer expected_output keys
+        self.validate_placeholder_bindings(layer_config, template_manager)
 
         self.logger.info("Complete configuration validation successful")
+        return True
+
+    def validate_placeholder_bindings(
+        self,
+        layer_config: PipelineConfig,
+        template_manager: TemplateManager
+    ) -> bool:
+        """Ensure that every placeholder referenced in a node's input_context
+        exists as an `expected_output` produced by some node in an earlier layer.
+
+        Special-case allowed globals: 'query' and 'input' are permitted placeholders.
+        """
+        self.logger.info("Validating placeholder bindings across layers")
+
+        # Set of available output keys produced so far (start with 'query' as input)
+        available_outputs: set[str] = set(['query', 'input'])
+
+        for layer_idx, layer in enumerate(layer_config.layers):
+            # Collect expected_output keys for nodes in this layer after checks
+            this_layer_outputs: list[str] = []
+
+            for node in layer.nodes:
+                # Fetch template for this node
+                try:
+                    tmpl = template_manager.get_template(node.template_id)
+                except KeyError:
+                    raise ValueError(f"Template '{node.template_id}' for node '{node.node_id}' not found during placeholder validation")
+
+                # Template must declare expected_output
+                if 'expected_output' not in tmpl:
+                    raise ValueError(f"Template '{node.template_id}' missing 'expected_output' required by canonical contract")
+
+                exp_out = tmpl['expected_output']
+
+                # Validate expected_output naming
+                if not re.match(r'^[a-z0-9_]+$', exp_out):
+                    raise ValueError(
+                        f"Invalid expected_output '{exp_out}' in template '{node.template_id}'; use lowercase letters, digits, and underscores only"
+                    )
+
+                this_layer_outputs.append(exp_out)
+
+                # Now validate each placeholder in input_context
+                input_context = tmpl.get('input_context', '')
+                placeholders: list[str] = []
+                if isinstance(input_context, list):
+                    for item in input_context:
+                        placeholders.extend(re.findall(r'\{([^}]+)\}', item))
+                else:
+                    placeholders.extend(re.findall(r'\{([^}]+)\}', str(input_context)))
+
+                for ph in placeholders:
+                    if ph in available_outputs:
+                        continue
+                    # Not available — fail with descriptive message
+                    raise ValueError(
+                        f"ValidationError: Node '{node.node_id}' (layer {layer_idx}) template '{node.template_id}' references missing placeholder '{{{ph}}}'. "
+                        f"Available prior outputs: {sorted(list(available_outputs))}"
+                    )
+
+            # After validating this layer, add its expected outputs to available set
+            for o in this_layer_outputs:
+                available_outputs.add(o)
+
+        self.logger.info("Placeholder bindings validation successful")
         return True

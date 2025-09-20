@@ -64,15 +64,23 @@ def main():
     )
     run_parser.add_argument(
         "--layer-config", "-l",
-        default="epn_core/config/default_layer.json",
         help="Path to layer configuration file "
-             "(default: epn_core/config/default_layer.json)"
+             "(auto-discovers if not specified)"
     )
     run_parser.add_argument(
         "--template-config", "-t",
-        default="epn_core/config/default_template.json",
         help="Path to template configuration file "
-             "(default: epn_core/config/default_template.json)"
+             "(auto-discovers if not specified)"
+    )
+    run_parser.add_argument(
+        "--default",
+        action="store_true",
+        help="Force use of bundled default configs in `epn_core/config` instead of root files"
+    )
+    run_parser.add_argument(
+        "--merge-defaults",
+        action="store_true",
+        help="When used with --default, merge bundled defaults with project templates instead of replacing"
     )
 
     # Parse arguments
@@ -90,7 +98,7 @@ def main():
         elif args.command == "create-template":
             create_template_config(args.output, args.layer_config)
         elif args.command == "run":
-            run_pipeline(args.query, args.layer_config, args.template_config)
+            run_pipeline(args.query, args.layer_config, args.template_config, args.default, args.merge_defaults)
         else:
             parser.print_help()
 
@@ -155,22 +163,42 @@ def create_template_config(output_file: str, layer_config_file: Optional[str]):
         print("\n⚠️  Configuration not saved.")
 
 
-def run_pipeline(query: str, layer_config_file: str, template_config_file: str):
+def run_pipeline(query: str, layer_config_file: Optional[str], template_config_file: Optional[str], use_default: bool = False, merge_defaults: bool = False):
     """Run the EPN pipeline with the given query and configuration."""
     print("🚀 Starting Epistemological Propagation Network...")
     print(f"Query: {query}")
-    print(f"Layer config: {layer_config_file}")
-    print(f"Template config: {template_config_file}")
+
+    if layer_config_file and template_config_file:
+        print(f"Layer config: {layer_config_file}")
+        print(f"Template config: {template_config_file}")
+    else:
+        print("Configuration: Auto-discovering (layer.json/template.json at root, or defaults)")
     print("-" * 60)
 
     logger = get_logger("CLI")
 
     try:
-        # Initialize pipeline
-        pipeline = Pipeline()
+        # Initialize pipeline: if using --default, skip auto-discovery so we can load the desired defaults
+        if use_default:
+            pipeline = Pipeline(skip_autoload=True)
 
-        # Load configuration
-        pipeline.load_config(layer_config_file, template_config_file)
+            # Prefer project-level /config/default_*, fall back to bundled epn_core/config defaults
+            project_default_layer = "config/default_layer.json"
+            project_default_template = "config/default_template.json"
+
+            import os
+            if os.path.exists(project_default_layer) and os.path.exists(project_default_template):
+                pipeline.load_config(project_default_layer, project_default_template, replace_templates=not merge_defaults)
+            else:
+                pipeline.load_config("epn_core/config/default_layer.json", "epn_core/config/default_template.json", replace_templates=not merge_defaults)
+
+        else:
+            # Initialize with normal auto-discovery
+            pipeline = Pipeline()
+
+            # Load configuration if explicitly provided
+            if layer_config_file and template_config_file:
+                pipeline.load_config(layer_config_file, template_config_file)
 
         # Run the pipeline
         import asyncio

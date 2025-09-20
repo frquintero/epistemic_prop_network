@@ -1,11 +1,13 @@
-"""Configuration management for the EPN pipeline."""
+"""Configuration management for the EPN pipeline.
 
-from .loader import ConfigLoader
-from .template_manager import TemplateManager
-from .validator import Validator
+This package exposes configuration-related modules. Import specific
+components directly from their modules (for example,
+`from epn_core.config.template_manager import TemplateManager`) to
+avoid circular import issues during package import-time.
+"""
 
 __all__ = [
-    'ConfigLoader',
-    'TemplateManager',
-    'Validator',
+    'template_manager',
+    'validator',
+    'loader',
 ]

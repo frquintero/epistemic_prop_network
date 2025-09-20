@@ -1,19 +1,17 @@
-"""Core classes for the Epistemological Propagation Network."""
+"""Core package for EPN.
 
-from .node import Node, NodeConfig, LayerConfig, PipelineConfig
-from .layer import Layer, ExecutionMode
-from .pipeline import Pipeline
-from .nodes import BasicLLMNode
-from .factory import NodeFactory
+This package intentionally avoids importing implementation modules at
+package import time to prevent circular import problems during test
+collection. Import specific modules directly when needed, e.g.:
+
+    from epn_core.core.node import NodeConfig
+
+"""
 
 __all__ = [
-    'Node',
-    'NodeConfig',
-    'LayerConfig',
-    'PipelineConfig',
-    'Layer',
-    'ExecutionMode',
-    'Pipeline',
-    'BasicLLMNode',
-    'NodeFactory',
+    'node',
+    'layer',
+    'pipeline',
+    'nodes',
+    'factory',
 ]
