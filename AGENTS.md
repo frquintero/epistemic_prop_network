@@ -12,12 +12,11 @@ The pipeline enforces a strict canonical contract for inter-layer data to make e
 
 Core system modules reside in `epn_core/`: pipeline orchestration in `epn_core/core/`, configuration management in `epn_core/config/`, command-line interfaces in `epn_core/cli/`, and utilities in `epn_core/utils/`. Layered processing includes reformulation (layer1), parallel definition generation (layer2 with semantic and teleological nodes), and synthesis (layer3).
 
-Entry points include `main.py` (pipeline runner), `scripts/minimal_runner.py` (simple test runner), and `epn_cli.py` for CLI operations. Documentation and design references live alongside this file. Automated tests mirror the core modules inside `tests/`.
+Entry points include `scripts/minimal_runner.py` (simple test runner) and `epn_cli.py` for CLI operations. Documentation and design references live alongside this file. Automated tests mirror the core modules inside `tests/`.
 
 ## Build, Test, and Development Commands
 
 - `pip install -r requirements.txt` – install runtime dependencies inside the activated virtual environment.
-- `python main.py "Why are all models wrong yet some are useful?"` – execute the full 1-2-1 pipeline for an ad-hoc query.
 - `python scripts/minimal_runner.py "Why are all models wrong yet some are useful?"` – run simplified pipeline execution for testing.
 
 - `python epn_cli.py` – access command-line interface for configuration and management.
