@@ -56,3 +56,7 @@ The repository keeps user-facing and design documentation under `docs/` (except 
 - `docs/xai_integration.md`: Guidance for explainability / XAI hooks and integration tests.
 
 If you add or move documentation, please update this index so the next maintainer can find key files quickly.
+
+## Formatting Note
+
+- **Always convert Markdown headings to ATX style (`# Heading`)** to satisfy the repository linter and keep consistency across documentation.
