@@ -3,6 +3,7 @@
 from typing import Dict, Any, List
 
 from .base_configurator import Configurator
+from ..config.builder_utils import sanitize_name
 
 
 class LayerConfigurator(Configurator):
@@ -264,8 +265,9 @@ class LayerConfigurator(Configurator):
             except ValueError:
                 print("    Please enter a valid number")
 
+        node_id_clean = sanitize_name(node_id)
         return {
-            "id": node_id,
+            "id": node_id_clean,
             "name": node_name,
             "description": node_desc,
             "llm_config": {

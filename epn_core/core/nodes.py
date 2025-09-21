@@ -51,21 +51,17 @@ class BasicLLMNode(Node):
         """
         variables = {}
         
-        # Extract placeholders from input_context
+        # Extract placeholders from input_context strictly using brace syntax as defined
         input_context = self.template['input_context']
         placeholders = set()
-        
+        import re
         if isinstance(input_context, list):
-            # For synthesis node with list input_context
             for context_item in input_context:
-                import re
-                found_placeholders = re.findall(r'\{([^}]+)\}', context_item)
-                placeholders.update(found_placeholders)
+                found = re.findall(r'\{([^}]+)\}', context_item)
+                placeholders.update(found)
         else:
-            # For other nodes with string input_context
-            import re
-            found_placeholders = re.findall(r'\{([^}]+)\}', input_context)
-            placeholders.update(found_placeholders)
+            found = re.findall(r'\{([^}]+)\}', str(input_context))
+            placeholders.update(found)
 
         # Debug: log placeholders and incoming input_data keys
         try:
@@ -80,11 +76,14 @@ class BasicLLMNode(Node):
         # Handle different input types
         if isinstance(input_data, str):
             # For layer 1 reformulator: raw query string
+            # Populate only exact placeholders per canonical contract
             if 'question' in placeholders:
                 variables['question'] = input_data
+            if 'query' in placeholders:
+                variables['query'] = input_data
             if 'context_info' in placeholders:
-                variables['context_info'] = ''  # Empty for now
-            # Map any other placeholders to the input
+                variables['context_info'] = ''
+            # Do NOT perform fuzzy mapping; only set placeholders explicitly
             for placeholder in placeholders:
                 if placeholder not in variables:
                     variables[placeholder] = input_data

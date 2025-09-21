@@ -1,33 +1,46 @@
 {
   "templates": {
-    "reformulator_node": {
-      "node_epistemic_task": "You are an epistemological reformulator",
-      "template": "You are an epistemological reformulator",
+    "output_node_1": {
+      "template": "remove biases and give a philosphical context to the following question:: {query}",
+      "placeholders": [
+        "query"
+      ],
+      "metadata": {
+        "purpose": "remove biases and give a philosphical context to the following question:"
+      },
       "input_context": "{query}",
-      "expected_output": "reformulated_question",
+      "expected_output": "output_node_1",
       "instructions": [
-        "Neutralize biases",
-        "Prime for emplotment"
+        "ouput a reformulated question ending with a \"?\"",
+        "30 words max"
       ]
     },
-    "semantic_node": {
-      "node_epistemic_task": "You are a semantic epistemologist analyzing meaning and intent",
-      "template": "You are a semantic epistemologist analyzing meaning and intent",
-      "input_context": "{reformulated_question}",
-      "expected_output": "semantic_analysis",
+    "two_answers": {
+      "template": "based on the question, give two responses: one with a positive answer (what it is) and the other a negative answer (what it is not): {output_node_1}",
+      "placeholders": [
+        "output_node_1"
+      ],
+      "metadata": {
+        "purpose": "based on the question, give two responses: one with a positive answer (what it is) and the other a negative answer (what it is not)"
+      },
+      "input_context": "{output_node_1}",
+      "expected_output": "two_answers",
       "instructions": [
-        "Analyze deeply",
-        "Find patterns"
+        "100 words max"
       ]
     },
-    "synthesis_node": {
-      "node_epistemic_task": "You are a master synthesizer that weaves ideas together",
-      "template": "You are a master synthesizer that weaves ideas together",
-      "input_context": "{semantic_analysis}",
-      "expected_output": "comprehensive_synthesis",
+    "output": {
+      "template": "integrate and syntethize in one coherent response: {two_answers}",
+      "placeholders": [
+        "two_answers"
+      ],
+      "metadata": {
+        "purpose": "integrate and syntethize in one coherent response"
+      },
+      "input_context": "{two_answers}",
+      "expected_output": "output",
       "instructions": [
-        "Synthesize insights",
-        "Create coherent narrative"
+        "50 words max"
       ]
     }
   }

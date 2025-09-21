@@ -4,6 +4,7 @@ from typing import Dict, Any, List, Optional
 
 from .base_configurator import Configurator
 from ..config.loader import ConfigLoader
+from ..config.builder_utils import sanitize_name
 
 
 class TemplateConfigurator(Configurator):
@@ -150,6 +151,9 @@ class TemplateConfigurator(Configurator):
 
         # Extract placeholders from template
         placeholders = self._extract_placeholders(template_text)
+
+        # sanitize node id to keep canonical naming
+        node_id = sanitize_name(node_id)
 
         # Get word limit
         word_limit = self._get_word_limit()

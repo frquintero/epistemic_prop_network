@@ -2,60 +2,63 @@
   "layers": [
     {
       "id": "layer1",
-      "name": "Input",
-      "description": "Initial input processing and reformulation",
+      "name": "input layer",
+      "description": "input layer",
       "nodes": [
         {
-          "id": "reformulator_node",
-          "name": "reformulator node",
-          "type": "input",
-          "template_id": "reformulator_node",
-          "description": "Initial input processing and reformulation",
+          "id": "input node",
+          "name": "Input Node",
+          "type": "output_node_1",
+          "template_id": "output_node_1",
+          "expected_output": "output_node_1",
+          "description": "remove biases and give a philosphical context to the following question:",
           "llm_config": {
             "model": "openai/gpt-oss-20b",
             "temperature": 0.8,
             "reasoning_effort": "medium",
-            "max_tokens": 4096
+            "max_tokens": 8192
           }
         }
       ]
     },
     {
       "id": "layer2",
-      "name": "Processing layer 2",
-      "description": "Processing layer 2",
+      "name": "layer 2",
+      "description": "middle layer",
       "nodes": [
         {
-          "id": "semantic_node",
-          "name": "semantic node",
-          "type": "semantic_node",
-          "template_id": "semantic_node",
-          "description": "Processing node semantic_node",
+          "id": "middle node",
+          "name": "Middle Node",
+          "type": "two_answers",
+          "template_id": "two_answers",
+          "expected_output": "two_answers",
+          "description": "based on the question, give two responses: one with a positive answer (what it is) and the other a negative answer (what it is not)",
           "llm_config": {
             "model": "openai/gpt-oss-20b",
             "temperature": 0.8,
             "reasoning_effort": "medium",
-            "max_tokens": 4096
+            "max_tokens": 8192
           }
         }
       ]
     },
     {
       "id": "layer3",
-      "name": "Output",
-      "description": "Final synthesis and output generation",
+      "name": "output layer",
+      "description": "output layer",
       "nodes": [
         {
-          "id": "synthesis_node",
-          "name": "synthesis node",
+          "id": "output node",
+          "name": "Output Node",
           "type": "output",
-          "template_id": "synthesis_node",
-          "description": "Final synthesis and output generation",
+          "template_id": "output",
+          "expected_output": "output",
+          "description": "integrate and syntethize in one coherent response",
           "llm_config": {
             "model": "openai/gpt-oss-20b",
-            "temperature": 0.6,
-            "reasoning_effort": "high",
-            "max_tokens": 4096
+            "temperature": 0.8,
+            "reasoning_effort": "medium",
+            "max_tokens": 8192
           }
         }
       ]

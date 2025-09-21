@@ -25,6 +25,9 @@ def main():
         prog="epn"
     )
 
+    # (No legacy compatibility flags present — use subcommands `create-layer`,
+    # `create-template`, and `run` with the canonical flags.)
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # create-layer command
@@ -85,6 +88,8 @@ def main():
 
     # Parse arguments
     args = parser.parse_args()
+
+    # No legacy flag handling — require canonical subcommands/flags.
 
     if not args.command:
         parser.print_help()
