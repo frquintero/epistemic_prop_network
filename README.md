@@ -133,8 +133,3 @@ This helps catch placeholder/expected-output mismatches before executing runs th
 - Keep `template.json` and `layer.json` in the runtime shape expected by the loader (templates wrapped under `"templates"` and layers include `id` and node `template_id` fields).
 
 ---
-
-If you'd like, I can also:
-
-- Add a short example `layer.json` + `template.json` snippet to the README.
-- Add a one-line CLI examples block showing `epn_cli.py create-layer` and `create-template` usage.
