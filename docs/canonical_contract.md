@@ -13,8 +13,11 @@ This document defines the canonical data contract for inter-layer communication 
 - **Layer Ordering**: A node can only depend on outputs produced by nodes in previous layers (lower index). Forward or same-layer dependencies are invalid.
 
 - **Normalization / Naming Rules**:
+
   - Allowed characters: lowercase `a-z`, digits `0-9`, and underscore `_` only.
+
   - Authors must provide `expected_output` values using only allowed characters.
+
   - The runtime will not perform automatic normalization or fuzzy matching. Use the migration helper or the validator to find and fix mismatches.
 
 - **Single Responsibility**: Each node template should produce exactly one `expected_output`. For multiple logical outputs, define multiple nodes.
@@ -43,6 +46,7 @@ ValidationError: Template `teleological_node` declared `expected_output='Teleolo
 ## Loading Semantics
 
 - `replace` mode: Loads the supplied templates and replaces any currently loaded templates (no merging).
+
 - `merge` mode: Explicit opt-in; merges template sets with a defined precedence (project templates override defaults).
 
 Command-line semantics:
@@ -52,12 +56,15 @@ Command-line semantics:
 ## Migration Guidance
 
 - Use the migration helper (`tools/migrate_templates.py`) in dry-run mode to find placeholder mismatches and suggested fixes.
+
 - Apply fixes manually or with `--apply` after reviewing the proposed changes.
 
 ## Acceptance Criteria
 
 - Validator rejects any pipeline where placeholders are not exact matches to prior-layer `expected_output` keys.
+
 - `--default` runs load only the specified defaults (no silent merge).
+
 - Runtime remapping of node IDs to `expected_output` is removed once validator ensures correctness.
 
 ## Recent Implementation Notes (2025-09-21)

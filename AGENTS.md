@@ -1,4 +1,15 @@
-# Repository Guidelines
+# Agent Implementation Constraints
+
+- Agents: prefer fixing the root cause over adding fallbacks, duplicate
+  requests, or quick patches that mask logic errors. When making code
+  changes you must: 1) identify and explain the root cause, 2) implement
+  a minimal, surgical fix that addresses the root cause, 3) avoid
+  introducing fallback paths that hide failures during development, and
+  4) add tests or logging that prove the fix removes the underlying
+  issue. If a temporary workaround is required, mark it clearly with a
+  TODO and open an issue explaining why a temporary path was used.
+
+## Repository Guidelines
 
 ## Setup & Environment
 
