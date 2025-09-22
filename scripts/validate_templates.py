@@ -16,11 +16,36 @@ def load(path: Path):
         return json.load(f)
 
 
+def unwrap_templates(data, force_unwrap=False):
+    """Extract templates from data, handling wrapped and unwrapped formats.
+
+    Args:
+        data: Dictionary that may contain templates directly or under
+              'templates' key
+        force_unwrap: If True, only accept wrapped format; if False,
+                      accept both
+
+    Returns:
+        Templates dictionary
+    """
+    has_templates_key = (isinstance(data, dict) and "templates" in data
+                         and isinstance(data["templates"], dict))
+
+    if force_unwrap and not has_templates_key:
+        return data  # Let caller handle this case
+    elif has_templates_key:
+        return data["templates"]
+    else:
+        return data
+
+
 def validate(schema_path: Path, data_path: Path):
     schema = load(schema_path)
     data = load(data_path)
-    # Allow template files that wrap entries under a top-level `templates` key.
-    if schema_path.name == "template_schema.json" and isinstance(data, dict) and "templates" in data and isinstance(data["templates"], dict):
+    # Allow template files that wrap entries under a top-level `templates` key
+    if (schema_path.name == "template_schema.json" and
+        isinstance(data, dict) and "templates" in data and
+        isinstance(data["templates"], dict)):
         jsonschema.validate(instance=data["templates"], schema=schema)
     else:
         jsonschema.validate(instance=data, schema=schema)
@@ -28,9 +53,8 @@ def validate(schema_path: Path, data_path: Path):
 
 def check_placeholders(template_path: Path):
     data = load(template_path)
-    # Support either a plain mapping or a wrapper object with 'templates' key.
-    if isinstance(data, dict) and "templates" in data and isinstance(data["templates"], dict):
-        data = data["templates"]
+    # Support either a plain mapping or a wrapper object with 'templates' key
+    data = unwrap_templates(data)
     failures = []
     for name, obj in data.items():
         tpl = obj.get("template", "")
@@ -52,13 +76,13 @@ def check_placeholders(template_path: Path):
 
 
 def check_cross_references(template_path: Path, layer_path: Path):
-    """Ensure every expected_output referenced in layer.json has a template key."""
+    """Ensure every expected_output referenced in layer.json has template key."""
     tpl = load(template_path)
-    if isinstance(tpl, dict) and "templates" in tpl and isinstance(tpl["templates"], dict):
-        tpl = tpl["templates"]
+    tpl = unwrap_templates(tpl)
     layers = load(layer_path)
     # Support layer files that wrap the list under a top-level 'layers' key
-    if isinstance(layers, dict) and "layers" in layers and isinstance(layers["layers"], list):
+    if (isinstance(layers, dict) and "layers" in layers and
+            isinstance(layers["layers"], list)):
         layers = layers["layers"]
     tpl_keys = set(tpl.keys())
     missing = []
@@ -66,7 +90,8 @@ def check_cross_references(template_path: Path, layer_path: Path):
         for node in layer.get("nodes", []):
             expected = node.get("expected_output")
             if expected and expected not in tpl_keys:
-                missing.append((layer.get("name", "<unnamed>"), node.get("id", "<unnamed>"), expected))
+                missing.append((layer.get("name", "<unnamed>"),
+                               node.get("id", "<unnamed>"), expected))
     return missing
 
 

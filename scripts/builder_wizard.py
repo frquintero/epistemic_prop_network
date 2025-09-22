@@ -37,6 +37,36 @@ def ask(prompt: str, default: str | None = None) -> str | None:
     return resp.strip()
 
 
+def run_validation(context: str) -> int:
+    """Run template validation and return exit code.
+
+    Args:
+        context: Description of when validation is running
+                 (e.g. "dry-run", "after writing files")
+
+    Returns:
+        Exit code from validation (0 for success, non-zero for failure)
+    """
+    import subprocess
+    import sys
+
+    if context == "dry-run":
+        print_prefix = "Validation failed (dry-run). Not writing files."
+    else:
+        print("Running validation on generated files...")
+        print_prefix = ("Validation failed after writing files. "
+                        "See output above.")
+
+    res = subprocess.run([sys.executable, "scripts/validate_templates.py"],
+                         capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(print_prefix)
+        print(res.stderr)
+        return res.returncode
+    return 0
+
+
 
 def main() -> int:
     p = argparse.ArgumentParser()
@@ -240,17 +270,11 @@ def main() -> int:
         print(json.dumps(runtime_layers, indent=2))
         # Optionally validate the generated structures even in dry-run mode
         if not args.no_validate:
-            import subprocess
-            import sys
-
-            # Use the current Python interpreter (sys.executable) so validation
-            # runs in the same environment (venv) as this script.
-            res = subprocess.run([sys.executable, "scripts/validate_templates.py"], capture_output=True, text=True)
-            print(res.stdout)
-            if res.returncode != 0:
-                print("Validation failed (dry-run). Not writing files.")
-                print(res.stderr)
-                return res.returncode
+            # Use the current Python interpreter (sys.executable) so
+            # validation runs in the same environment (venv) as this script.
+            validation_result = run_validation("dry-run")
+            if validation_result != 0:
+                return validation_result
         return 0
 
     if args.timestamped:
@@ -271,16 +295,9 @@ def main() -> int:
     print(f"Wrote {tname} and {lname}")
 
     if not args.no_validate:
-        import subprocess
-        import sys
-
-        print("Running validation on generated files...")
-        res = subprocess.run([sys.executable, "scripts/validate_templates.py"], capture_output=True, text=True)
-        print(res.stdout)
-        if res.returncode != 0:
-            print("Validation failed after writing files. See output above.")
-            print(res.stderr)
-            return res.returncode
+        validation_result = run_validation("after writing files")
+        if validation_result != 0:
+            return validation_result
     return 0
 
 
