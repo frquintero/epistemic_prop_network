@@ -9,6 +9,28 @@
   issue. If a temporary workaround is required, mark it clearly with a
   TODO and open an issue explaining why a temporary path was used.
 
+Mandatory Runtime-Error Reporting Rule:
+
+- When an agent (developer) encounters a bug, exception, or any
+  `RuntimeError` during development or while running the pipeline, the
+  agent must, before applying code changes, do the following and include
+  the results in the commit/PR description or in an accompanying note:
+  1. **Diagnosis:** Briefly explain what you think the root cause is
+    (one or two sentences). This should include which module or
+    function likely triggered the error and why, based on observed
+    symptoms (stack trace, failing inputs, or missing state).
+  2. **Proposed Fix:** Describe the minimal, surgical change that will
+    address the root cause. Avoid adding broad fallbacks or hiding the
+    failure; prioritize a change that makes the failure explicit or
+    corrects the underlying state transition.
+  3. **Verification Plan:** State the test or logging change you will
+    add to prove the fix removes the issue (unit test name, scenario, or
+    log message to assert the earlier failure no longer occurs).
+
+  This diagnostic step is mandatory and should be visible in PRs. It
+  ensures failures are understood and fixed at the root rather than
+  masked.
+
 ## Repository Guidelines
 
 ## Setup & Environment
